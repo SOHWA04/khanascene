@@ -1,40 +1,46 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://unistyl.es/), etc.
+ * Maintain backwards compatibility with Expo template components while exposing KhanaScene theme.
  */
 
-import '@/global.css';
-
 import { Platform } from 'react-native';
+import { BrandColors, Colors as KhanaSceneColors } from '@/theme';
 
 export const Colors = {
   light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
+    text: KhanaSceneColors.light.text,
+    background: KhanaSceneColors.light.background,
+    backgroundElement: KhanaSceneColors.light.backgroundElement,
+    backgroundSelected: KhanaSceneColors.light.backgroundSelected,
+    textSecondary: KhanaSceneColors.light.textSecondary,
+    primary: KhanaSceneColors.light.primary,
+    primaryDark: KhanaSceneColors.light.primaryDark,
+    accent: KhanaSceneColors.light.accent,
+    surface: KhanaSceneColors.light.surface,
+    border: KhanaSceneColors.light.border,
   },
   dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
+    text: KhanaSceneColors.dark.text,
+    background: KhanaSceneColors.dark.background,
+    backgroundElement: KhanaSceneColors.dark.backgroundElement,
+    backgroundSelected: KhanaSceneColors.dark.backgroundSelected,
+    textSecondary: KhanaSceneColors.dark.textSecondary,
+    primary: KhanaSceneColors.dark.primary,
+    primaryDark: KhanaSceneColors.dark.primaryDark,
+    accent: KhanaSceneColors.dark.accent,
+    surface: KhanaSceneColors.dark.surface,
+    border: KhanaSceneColors.dark.border,
   },
 } as const;
+
+export { BrandColors };
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 
 export const Fonts = Platform.select({
   ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
     sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
     serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
     rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
     mono: 'ui-monospace',
   },
   default: {

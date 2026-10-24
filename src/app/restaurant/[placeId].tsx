@@ -1,0 +1,679 @@
+import React from 'react';
+import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { useQuery } from '@tanstack/react-query';
+
+import { ComparisonTrayBar } from '@/components/ComparisonTrayBar';
+import { GoogleAttributionBadge } from '@/components/GoogleAttributionBadge';
+import {
+  EmptyStateBlock,
+  ErrorStateBlock,
+  LoadingStateBlock,
+} from '@/components/StateFeedbackBlocks';
+import { restaurantRepository } from '@/repositories/restaurantRepository';
+import { useComparisonStore } from '@/stores/useComparisonStore';
+import { useSavedStore } from '@/stores/useSavedStore';
+import {
+  calculateBayesianScore,
+  formatGooglePriceLevel,
+  formatPkrRange,
+} from '@/utils/ranking';
+import { BrandColors, Radii, Spacing, Typography } from '@/theme';
+
+export default function RestaurantDetailScreen() {
+  const { placeId } = useLocalSearchParams<{ placeId: string }>();
+  const resolvedPlaceId = placeId ?? 'unknown';
+
+  const { isPlaceSaved, toggleSavedPlace } = useSavedStore();
+  const { selectedPlaceIds, toggleComparisonPlace } = useComparisonStore();
+  const saved = isPlaceSaved(resolvedPlaceId);
+  const inComparison = selectedPlaceIds.includes(resolvedPlaceId);
+
+  const { data: item, isLoading, isError, refetch } = useQuery({
+    queryKey: ['restaurant-detail', resolvedPlaceId],
+    queryFn: () => restaurantRepository.getRestaurantByPlaceId(resolvedPlaceId),
+  });
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <LoadingStateBlock label="Loading restaurant details..." />
+      </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <View style={styles.container}>
+        <ErrorStateBlock
+          message="Could not load details for this restaurant."
+          onRetry={() => refetch()}
+        />
+      </View>
+    );
+  }
+
+  if (!item) {
+    const encoded = encodeURIComponent(resolvedPlaceId);
+    return (
+      <ScrollView contentContainerStyle={styles.container}>
+        <EmptyStateBlock
+          title="Restaurant details not found in current mode"
+          message={`Place ID "${resolvedPlaceId}" was not found in the active dataset. You can view this place directly on Google Maps.`}
+          actionLabel="Open on Google Maps"
+          onAction={() =>
+            Linking.openURL(
+              `https://www.google.com/maps/search/?api=1&query=${encoded}&query_place_id=${encoded}`
+            )
+          }
+        />
+        <GoogleAttributionBadge />
+      </ScrollView>
+    );
+  }
+
+  const { googleData, khanaSceneData, isFixtureData } = item;
+
+  const openDirections = () => {
+    const uri =
+      googleData.googleMapsDirectionsUri ??
+      googleData.googleMapsUri ??
+      `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(googleData.name)}`;
+    Linking.openURL(uri);
+  };
+
+  const openGoogleMapsListing = () => {
+    Linking.openURL(googleData.googleMapsUri);
+  };
+
+  const openPhoneDialer = () => {
+    if (googleData.nationalPhoneNumber) {
+      Linking.openURL(`tel:${googleData.nationalPhoneNumber.replace(/\s+/g, '')}`);
+    }
+  };
+
+  const openOfficialWebsite = () => {
+    if (googleData.websiteUri) {
+      Linking.openURL(googleData.websiteUri);
+    }
+  };
+
+  const khanaSceneAdjustedScore =
+    khanaSceneData?.khanaSceneRatingAvg && khanaSceneData?.khanaSceneReviewCount
+      ? calculateBayesianScore({
+          averageRating: khanaSceneData.khanaSceneRatingAvg,
+          reviewCount: khanaSceneData.khanaSceneReviewCount,
+        })
+      : null;
+
+  return (
+    <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <ComparisonTrayBar />
+
+      {/* Header Section */}
+      <View style={styles.heroCard}>
+        <View style={styles.badgeRow}>
+          {khanaSceneData?.isKhanaScenePick ? (
+            <View style={styles.pickBadge}>
+              <Ionicons name="sparkles" size={13} color={BrandColors.deepForestGreen} />
+              <Text style={styles.pickBadgeText}>KhanaScene Pick</Text>
+            </View>
+          ) : null}
+          {isFixtureData ? (
+            <View style={styles.fixtureBadge}>
+              <Text style={styles.fixtureBadgeText}>DEV FIXTURE</Text>
+            </View>
+          ) : null}
+        </View>
+
+        <Text style={styles.restaurantName}>{googleData.name}</Text>
+        <Text style={styles.categoryLine}>
+          {googleData.primaryCategory ?? 'Category unavailable'}
+          {googleData.neighbourhood ? ` • ${googleData.neighbourhood}` : ''}
+        </Text>
+
+        {/* Explicitly Separated Ratings Box */}
+        <View style={styles.ratingsGrid}>
+          <View style={styles.ratingBox}>
+            <Text style={styles.ratingSourceLabel}>GOOGLE MAPS RATING</Text>
+            <View style={styles.ratingMainRow}>
+              <Ionicons name="star" size={18} color={BrandColors.saffronAccent} />
+              <Text style={styles.ratingBigNumber}>
+                {googleData.googleRating != null
+                  ? googleData.googleRating.toFixed(1)
+                  : 'N/A'}
+              </Text>
+            </View>
+            <Text style={styles.ratingSubText}>
+              {googleData.googleReviewCount != null
+                ? `${googleData.googleReviewCount.toLocaleString()} Google reviews`
+                : 'Review count unavailable'}
+            </Text>
+          </View>
+
+          <View style={styles.ratingBox}>
+            <Text style={styles.ratingSourceLabel}>KHANASCENE RATING</Text>
+            <View style={styles.ratingMainRow}>
+              <Ionicons name="ribbon" size={18} color={BrandColors.primaryGreen} />
+              <Text style={styles.ratingBigNumber}>
+                {khanaSceneAdjustedScore != null
+                  ? khanaSceneAdjustedScore.toFixed(2)
+                  : 'No reviews yet'}
+              </Text>
+            </View>
+            <Text style={styles.ratingSubText}>
+              {khanaSceneData?.khanaSceneReviewCount
+                ? `${khanaSceneData.khanaSceneReviewCount} KhanaScene reviews (Bayesian)`
+                : 'Separate from Google ratings'}
+            </Text>
+          </View>
+        </View>
+
+        {/* Address, Price & Opening Status */}
+        <View style={styles.metaList}>
+          <View style={styles.metaItem}>
+            <Ionicons name="location-outline" size={18} color={BrandColors.primaryGreen} />
+            <Text style={styles.metaText}>
+              {googleData.formattedAddress ?? 'Address unavailable'}
+            </Text>
+          </View>
+
+          <View style={styles.metaItem}>
+            <Ionicons name="wallet-outline" size={18} color={BrandColors.primaryGreen} />
+            <Text style={styles.metaText}>
+              Google Price Level: {formatGooglePriceLevel(googleData.priceLevel)}
+              {khanaSceneData?.priceMinPkr || khanaSceneData?.priceMaxPkr
+                ? ` • Verified Menu Range: ${formatPkrRange(
+                    khanaSceneData?.priceMinPkr,
+                    khanaSceneData?.priceMaxPkr
+                  )}`
+                : ''}
+            </Text>
+          </View>
+
+          <View style={styles.metaItem}>
+            <Ionicons name="time-outline" size={18} color={BrandColors.primaryGreen} />
+            <Text style={styles.metaText}>
+              {googleData.openNow === true
+                ? 'Currently Open'
+                : googleData.openNow === false
+                  ? 'Currently Closed'
+                  : 'Current opening status unavailable'}
+            </Text>
+          </View>
+        </View>
+
+        {/* Action Buttons — Only offer Call / Website when real data exists */}
+        <View style={styles.actionButtonsWrap}>
+          <Pressable onPress={openDirections} style={styles.primaryActionBtn}>
+            <Ionicons name="navigate" size={16} color={BrandColors.white} />
+            <Text style={styles.primaryActionText}>Directions</Text>
+          </Pressable>
+
+          {googleData.nationalPhoneNumber ? (
+            <Pressable onPress={openPhoneDialer} style={styles.secondaryActionBtn}>
+              <Ionicons name="call-outline" size={16} color={BrandColors.deepForestGreen} />
+              <Text style={styles.secondaryActionText}>Call</Text>
+            </Pressable>
+          ) : null}
+
+          {googleData.websiteUri ? (
+            <Pressable onPress={openOfficialWebsite} style={styles.secondaryActionBtn}>
+              <Ionicons name="globe-outline" size={16} color={BrandColors.deepForestGreen} />
+              <Text style={styles.secondaryActionText}>Visit Website</Text>
+            </Pressable>
+          ) : null}
+
+          <Pressable
+            onPress={() => toggleSavedPlace(item.placeId)}
+            style={[styles.secondaryActionBtn, saved && styles.savedActiveBtn]}>
+            <Ionicons
+              name={saved ? 'bookmark' : 'bookmark-outline'}
+              size={16}
+              color={saved ? BrandColors.white : BrandColors.deepForestGreen}
+            />
+            <Text style={[styles.secondaryActionText, saved && styles.savedActiveText]}>
+              {saved ? 'Saved' : 'Save to Favourites'}
+            </Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => toggleComparisonPlace(item.placeId)}
+            style={[styles.secondaryActionBtn, inComparison && styles.savedActiveBtn]}>
+            <Ionicons
+              name="git-compare-outline"
+              size={16}
+              color={inComparison ? BrandColors.white : BrandColors.deepForestGreen}
+            />
+            <Text
+              style={[
+                styles.secondaryActionText,
+                inComparison && styles.savedActiveText,
+              ]}>
+              {inComparison ? 'In Comparison' : 'Add to Compare'}
+            </Text>
+          </Pressable>
+
+          <Pressable onPress={openGoogleMapsListing} style={styles.secondaryActionBtn}>
+            <Ionicons name="map-outline" size={16} color={BrandColors.deepForestGreen} />
+            <Text style={styles.secondaryActionText}>View on Google Maps</Text>
+          </Pressable>
+        </View>
+      </View>
+
+      {/* Section 1: Overview */}
+      <View style={styles.sectionCard}>
+        <Text style={styles.sectionTitle}>1. Overview</Text>
+        {khanaSceneData?.pickReason ? (
+          <Text style={styles.pickCallout}>{khanaSceneData.pickReason}</Text>
+        ) : null}
+        <Text style={styles.bodyText}>
+          Cuisines:{' '}
+          {khanaSceneData?.cuisines?.length
+            ? khanaSceneData.cuisines.join(', ')
+            : googleData.primaryCategory ?? 'Not specified'}
+        </Text>
+        <Text style={styles.bodyText}>
+          Family-friendly facilities:{' '}
+          {khanaSceneData?.isFamilyFriendly === true
+            ? 'Verified Family Dining Area'
+            : 'Unverified / Not specified'}
+        </Text>
+      </View>
+
+      {/* Section 2: Google Reviews */}
+      <View style={styles.sectionCard}>
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionTitle}>2. Google Reviews</Text>
+          <Pressable onPress={openGoogleMapsListing}>
+            <Text style={styles.externalLinkText}>View all on Google Maps</Text>
+          </Pressable>
+        </View>
+        <Text style={styles.policyNotice}>
+          Displaying permitted reviews returned by Google Places API in Google&apos;s default
+          ordering. Reviews are not verified by KhanaScene.
+        </Text>
+
+        {googleData.reviews && googleData.reviews.length > 0 ? (
+          <View style={styles.reviewList}>
+            {googleData.reviews.map((rev) => (
+              <View key={rev.name} style={styles.reviewItem}>
+                <View style={styles.reviewHeader}>
+                  <View style={styles.authorAvatar}>
+                    <Ionicons name="person" size={14} color={BrandColors.deepForestGreen} />
+                  </View>
+                  <View style={styles.authorMeta}>
+                    <Pressable
+                      disabled={!rev.authorAttribution.uri}
+                      onPress={() =>
+                        rev.authorAttribution.uri &&
+                        Linking.openURL(rev.authorAttribution.uri)
+                      }>
+                      <Text style={styles.authorName}>
+                        {rev.authorAttribution.displayName}
+                      </Text>
+                    </Pressable>
+                    <Text style={styles.reviewTime}>
+                      {rev.relativePublishTimeDescription} • Rating: {rev.rating}/5
+                    </Text>
+                  </View>
+                  {rev.googleMapsUri ? (
+                    <Pressable onPress={() => Linking.openURL(rev.googleMapsUri!)}>
+                      <Text style={styles.sourceLink}>Source</Text>
+                    </Pressable>
+                  ) : null}
+                </View>
+                {rev.text?.text ? (
+                  <Text style={styles.reviewBody}>{rev.text.text}</Text>
+                ) : null}
+              </View>
+            ))}
+          </View>
+        ) : (
+          <Text style={styles.emptyNotice}>
+            No individual Google review snippets returned in this response. Tap &quot;View all on
+            Google Maps&quot; to read the full review listing on Google Maps.
+          </Text>
+        )}
+      </View>
+
+      {/* Section 3: Menu and Prices (Only displayed when verified data exists) */}
+      {khanaSceneData?.menus && khanaSceneData.menus.length > 0 ? (
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>3. Menu & Verified Prices (PKR)</Text>
+          {khanaSceneData.menus.map((menu) => (
+            <View key={menu.id} style={styles.menuBlock}>
+              <Text style={styles.menuSubtitle}>
+                {menu.name} • Verified: {menu.lastVerifiedAt}
+              </Text>
+              {menu.items.map((menuItem) => (
+                <View key={menuItem.id} style={styles.menuItemRow}>
+                  <View style={styles.menuItemTextCol}>
+                    <Text style={styles.menuItemName}>{menuItem.name}</Text>
+                    {menuItem.description ? (
+                      <Text style={styles.menuItemDesc}>{menuItem.description}</Text>
+                    ) : null}
+                  </View>
+                  <Text style={styles.menuItemPrice}>
+                    Rs {menuItem.pricePkr.toLocaleString('en-PK')}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          ))}
+        </View>
+      ) : null}
+
+      {/* Section 5: Location and Hours (Only displayed when hours or location exist) */}
+      {googleData.regularOpeningHoursText || googleData.location ? (
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>Location & Opening Hours</Text>
+          {googleData.regularOpeningHoursText?.map((line) => (
+            <Text key={line} style={styles.hoursLine}>
+              {line}
+            </Text>
+          )) ?? (
+            <Text style={styles.emptyNotice}>
+              Detailed weekly hours are not available for this restaurant.
+            </Text>
+          )}
+        </View>
+      ) : null}
+
+      {/* Section 6: KhanaScene Reviews (Only displayed when available) */}
+      {khanaSceneData?.khanaSceneReviews && khanaSceneData.khanaSceneReviews.length > 0 ? (
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>KhanaScene Community Reviews</Text>
+          {khanaSceneData.khanaSceneReviews.map((ksRev) => (
+            <View key={ksRev.id} style={styles.reviewItem}>
+              <Text style={styles.authorName}>
+                {ksRev.authorDisplayName} • {ksRev.overallRating}/5
+              </Text>
+              <Text style={styles.reviewTime}>Visited: {ksRev.visitDate ?? 'Unspecified'}</Text>
+              <Text style={styles.reviewBody}>{ksRev.reviewText}</Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
+
+      <GoogleAttributionBadge notice="Google ratings, review counts and review snippets are provided by Google Maps. Prices and KhanaScene Picks are maintained independently by KhanaScene." />
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    padding: Spacing.lg,
+    gap: Spacing.lg,
+    paddingBottom: Spacing.xxl,
+  },
+  heroCard: {
+    backgroundColor: BrandColors.white,
+    borderRadius: Radii.lg,
+    padding: Spacing.lg,
+    gap: Spacing.md,
+    borderWidth: 1,
+    borderColor: BrandColors.borderSubtle,
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.xs,
+  },
+  pickBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: BrandColors.saffronAccent,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: Radii.pill,
+  },
+  pickBadgeText: {
+    fontSize: Typography.sizes.xs,
+    fontWeight: '700',
+    color: BrandColors.deepForestGreen,
+  },
+  fixtureBadge: {
+    backgroundColor: BrandColors.lightGreen,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: Radii.sm,
+  },
+  fixtureBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: BrandColors.deepForestGreen,
+  },
+  restaurantName: {
+    fontSize: Typography.sizes.xl,
+    fontWeight: '800',
+    color: BrandColors.deepForestGreen,
+  },
+  categoryLine: {
+    fontSize: Typography.sizes.sm,
+    color: BrandColors.mutedGrey,
+    fontWeight: '500',
+  },
+  ratingsGrid: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+  },
+  ratingBox: {
+    flex: 1,
+    backgroundColor: BrandColors.warmCream,
+    borderRadius: Radii.md,
+    padding: Spacing.md,
+    gap: 4,
+    borderWidth: 1,
+    borderColor: BrandColors.borderSubtle,
+  },
+  ratingSourceLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: BrandColors.mutedGrey,
+    letterSpacing: 0.5,
+  },
+  ratingMainRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  ratingBigNumber: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: '800',
+    color: BrandColors.charcoal,
+  },
+  ratingSubText: {
+    fontSize: 11,
+    color: BrandColors.mutedGrey,
+  },
+  metaList: {
+    gap: Spacing.xs,
+  },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.sm,
+  },
+  metaText: {
+    flex: 1,
+    fontSize: Typography.sizes.xs,
+    color: BrandColors.charcoal,
+    lineHeight: 18,
+  },
+  actionButtonsWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
+    marginTop: 4,
+  },
+  primaryActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: BrandColors.primaryGreen,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: Radii.pill,
+  },
+  primaryActionText: {
+    color: BrandColors.white,
+    fontSize: Typography.sizes.xs,
+    fontWeight: '700',
+  },
+  secondaryActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: BrandColors.lightGreen,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: Radii.pill,
+  },
+  secondaryActionText: {
+    color: BrandColors.deepForestGreen,
+    fontSize: Typography.sizes.xs,
+    fontWeight: '700',
+  },
+  savedActiveBtn: {
+    backgroundColor: BrandColors.deepForestGreen,
+  },
+  savedActiveText: {
+    color: BrandColors.white,
+  },
+  sectionCard: {
+    backgroundColor: BrandColors.white,
+    borderRadius: Radii.lg,
+    padding: Spacing.lg,
+    gap: Spacing.sm,
+    borderWidth: 1,
+    borderColor: BrandColors.borderSubtle,
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: Spacing.xs,
+  },
+  sectionTitle: {
+    fontSize: Typography.sizes.md,
+    fontWeight: '800',
+    color: BrandColors.deepForestGreen,
+  },
+  externalLinkText: {
+    fontSize: Typography.sizes.xs,
+    fontWeight: '700',
+    color: BrandColors.primaryGreen,
+  },
+  pickCallout: {
+    backgroundColor: BrandColors.saffronLight,
+    color: BrandColors.deepForestGreen,
+    padding: Spacing.sm,
+    borderRadius: Radii.sm,
+    fontSize: Typography.sizes.xs,
+    fontWeight: '600',
+  },
+  bodyText: {
+    fontSize: Typography.sizes.sm,
+    color: BrandColors.charcoal,
+    lineHeight: 20,
+  },
+  policyNotice: {
+    fontSize: 11,
+    color: BrandColors.mutedGrey,
+    fontStyle: 'italic',
+  },
+  reviewList: {
+    gap: Spacing.sm,
+  },
+  reviewItem: {
+    backgroundColor: BrandColors.warmCream,
+    borderRadius: Radii.md,
+    padding: Spacing.md,
+    gap: 6,
+  },
+  reviewHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  authorAvatar: {
+    width: 28,
+    height: 28,
+    borderRadius: Radii.pill,
+    backgroundColor: BrandColors.lightGreen,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  authorMeta: {
+    flex: 1,
+  },
+  authorName: {
+    fontSize: Typography.sizes.xs,
+    fontWeight: '700',
+    color: BrandColors.deepForestGreen,
+  },
+  reviewTime: {
+    fontSize: 11,
+    color: BrandColors.mutedGrey,
+  },
+  sourceLink: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: BrandColors.primaryGreen,
+  },
+  reviewBody: {
+    fontSize: Typography.sizes.xs,
+    color: BrandColors.charcoal,
+    lineHeight: 18,
+  },
+  emptyNotice: {
+    fontSize: Typography.sizes.xs,
+    color: BrandColors.mutedGrey,
+    lineHeight: 18,
+  },
+  menuBlock: {
+    gap: Spacing.xs,
+  },
+  menuSubtitle: {
+    fontSize: Typography.sizes.xs,
+    fontWeight: '700',
+    color: BrandColors.mutedGrey,
+    marginBottom: 4,
+  },
+  menuItemRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    paddingVertical: Spacing.xs,
+    borderBottomWidth: 1,
+    borderBottomColor: BrandColors.borderSubtle,
+    gap: Spacing.md,
+  },
+  menuItemTextCol: {
+    flex: 1,
+    gap: 2,
+  },
+  menuItemName: {
+    fontSize: Typography.sizes.sm,
+    fontWeight: '700',
+    color: BrandColors.charcoal,
+  },
+  menuItemDesc: {
+    fontSize: Typography.sizes.xs,
+    color: BrandColors.mutedGrey,
+  },
+  menuItemPrice: {
+    fontSize: Typography.sizes.sm,
+    fontWeight: '800',
+    color: BrandColors.primaryGreen,
+  },
+  hoursLine: {
+    fontSize: Typography.sizes.xs,
+    color: BrandColors.charcoal,
+    lineHeight: 18,
+  },
+});
