@@ -133,10 +133,14 @@ export interface KhanaSceneRecord {
   slug: string;
   cityId: CitySlug;
   areaId?: string;
+  areaName?: string;
+  primaryCategory?: string;
   address?: string;
   latitude?: number;
   longitude?: number;
+  officialWebsite?: string;
   phoneNumber?: string;
+  openingHoursText?: string[];
   cuisines: string[];
   priceMinPkr?: number;
   priceMaxPkr?: number;

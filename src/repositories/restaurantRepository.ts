@@ -52,10 +52,16 @@ export function mapKhanaSceneRecordToDiscoveryItem(
       placeId,
       name: record.name,
       formattedAddress: record.address,
-      shortAddress: record.address,
+      shortAddress: record.areaName
+        ? `${record.areaName}, ${record.cityId === 'rawalpindi' ? 'Rawalpindi' : 'Islamabad'}`
+        : record.address,
       cityId: record.cityId,
-      primaryCategory: record.cuisines.join(', ') || 'Restaurant',
+      neighbourhood: record.areaName,
+      primaryCategory:
+        record.primaryCategory ?? (record.cuisines.join(', ') || 'Restaurant'),
+      regularOpeningHoursText: record.openingHoursText,
       nationalPhoneNumber: record.phoneNumber,
+      websiteUri: record.officialWebsite,
       location,
       googleMapsUri: freeMapsUrl,
       googleMapsDirectionsUri: location
