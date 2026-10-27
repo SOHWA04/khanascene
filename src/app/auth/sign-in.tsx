@@ -3,6 +3,8 @@ import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-
 import { router } from 'expo-router';
 
 import { KhanaSceneLogo } from '@/components/KhanaSceneLogo';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { useSavedStore } from '@/stores/useSavedStore';
 import { BrandColors, Radii, Spacing, Typography } from '@/theme';
 
 export default function SignInScreen() {
@@ -10,14 +12,21 @@ export default function SignInScreen() {
   const [password, setPassword] = useState('');
   const [feedback, setFeedback] = useState<string | null>(null);
 
-  const handleSignIn = () => {
-    if (!email.trim() || !password) {
-      setFeedback('Please enter both your email address and password.');
+  const { signInWithEmail, isSubmitting } = useAuthStore();
+  const syncWithCloudForUser = useSavedStore((s) => s.syncWithCloudForUser);
+
+  const handleSignIn = async () => {
+    setFeedback(null);
+    const result = await signInWithEmail(email, password);
+    if (!result.ok) {
+      setFeedback(result.error ?? 'Sign-in failed.');
       return;
     }
-    setFeedback(
-      'Supabase Auth will be connected in Phase 3 once your Supabase project URL and anon key are configured.'
-    );
+    const currentUser = useAuthStore.getState().user;
+    if (currentUser) {
+      await syncWithCloudForUser(currentUser.id);
+    }
+    router.back();
   };
 
   return (
@@ -57,8 +66,13 @@ export default function SignInScreen() {
 
         {feedback ? <Text style={styles.feedbackText}>{feedback}</Text> : null}
 
-        <Pressable onPress={handleSignIn} style={styles.primaryButton}>
-          <Text style={styles.primaryButtonText}>Sign In</Text>
+        <Pressable
+          disabled={isSubmitting}
+          onPress={handleSignIn}
+          style={[styles.primaryButton, isSubmitting && styles.buttonDisabled]}>
+          <Text style={styles.primaryButtonText}>
+            {isSubmitting ? 'Signing In...' : 'Sign In'}
+          </Text>
         </Pressable>
 
         <Pressable onPress={() => router.replace('/auth/sign-up')} style={styles.switchLink}>
@@ -122,6 +136,9 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: Radii.md,
     alignItems: 'center',
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
   primaryButtonText: {
     color: BrandColors.white,

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
+  Linking,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -26,6 +27,7 @@ import {
   calculateHaversineDistanceKm,
   restaurantRepository,
 } from '@/repositories/restaurantRepository';
+import { buildFreeGoogleMapsSearchUrl } from '@/services/google-places/placesService';
 import { usePreferencesStore } from '@/stores/usePreferencesStore';
 import { SearchFilters, SortOption } from '@/types/restaurant';
 import { requestOnDemandUserLocation } from '@/utils/location';
@@ -155,10 +157,19 @@ export default function SearchScreen() {
     ]
   );
 
-  const { data: results = [], isLoading, isError, refetch } = useQuery({
+  const {
+    data: searchData,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ['search-restaurants', filters, userCoordinates],
     queryFn: () => restaurantRepository.searchRestaurants(filters, userCoordinates),
   });
+
+  const results = searchData?.items ?? [];
+  const quotaPaused = searchData?.quotaPaused ?? false;
+  const quotaMessage = searchData?.quotaMessage;
 
   const handleSortSelection = async (option: SortOption) => {
     if (option === 'nearest' && !userCoordinates) {
@@ -385,14 +396,32 @@ export default function SearchScreen() {
           </View>
         ) : null}
 
+        {quotaPaused && quotaMessage ? (
+          <View style={styles.locationWarning}>
+            <Ionicons name="shield-checkmark-outline" size={16} color={BrandColors.deepForestGreen} />
+            <Text style={styles.locationWarningText}>{quotaMessage}</Text>
+          </View>
+        ) : null}
+
         <ComparisonTrayBar />
 
-        {/* Results Count & List */}
+        {/* Results Count & Free Google Maps Deep Link Fallback */}
         <View style={styles.resultsHeader}>
           <Text style={styles.resultsCount}>
             {results.length} {results.length === 1 ? 'restaurant' : 'restaurants'} found in{' '}
             {activeCity.name}
           </Text>
+          <Pressable
+            onPress={() =>
+              Linking.openURL(
+                buildFreeGoogleMapsSearchUrl(
+                  rawQuery || selectedCuisine || 'Restaurants',
+                  selectedCity
+                )
+              )
+            }>
+            <Text style={styles.resetLink}>Open query in Google Maps (Free)</Text>
+          </Pressable>
         </View>
 
         {isLoading ? (

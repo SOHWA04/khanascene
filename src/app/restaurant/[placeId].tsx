@@ -1,6 +1,14 @@
-import React from 'react';
-import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import React, { useState } from 'react';
+import {
+  Linking,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 
@@ -11,7 +19,9 @@ import {
   ErrorStateBlock,
   LoadingStateBlock,
 } from '@/components/StateFeedbackBlocks';
+import { communityRepository } from '@/repositories/communityRepository';
 import { restaurantRepository } from '@/repositories/restaurantRepository';
+import { useAuthStore } from '@/stores/useAuthStore';
 import { useComparisonStore } from '@/stores/useComparisonStore';
 import { useSavedStore } from '@/stores/useSavedStore';
 import {
@@ -27,8 +37,15 @@ export default function RestaurantDetailScreen() {
 
   const { isPlaceSaved, toggleSavedPlace } = useSavedStore();
   const { selectedPlaceIds, toggleComparisonPlace } = useComparisonStore();
+  const { user } = useAuthStore();
   const saved = isPlaceSaved(resolvedPlaceId);
   const inComparison = selectedPlaceIds.includes(resolvedPlaceId);
+
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [overallRating, setOverallRating] = useState(5);
+  const [reviewText, setReviewText] = useState('');
+  const [reviewFeedback, setReviewFeedback] = useState<string | null>(null);
+  const [reportFeedback, setReportFeedback] = useState<string | null>(null);
 
   const { data: item, isLoading, isError, refetch } = useQuery({
     queryKey: ['restaurant-detail', resolvedPlaceId],
@@ -381,21 +398,118 @@ export default function RestaurantDetailScreen() {
         </View>
       ) : null}
 
-      {/* Section 6: KhanaScene Reviews (Only displayed when available) */}
-      {khanaSceneData?.khanaSceneReviews && khanaSceneData.khanaSceneReviews.length > 0 ? (
-        <View style={styles.sectionCard}>
+      {/* Section 6: KhanaScene Community Reviews & Moderated Submission */}
+      <View style={styles.sectionCard}>
+        <View style={styles.sectionHeaderRow}>
           <Text style={styles.sectionTitle}>KhanaScene Community Reviews</Text>
-          {khanaSceneData.khanaSceneReviews.map((ksRev) => (
+          <Pressable
+            onPress={() => {
+              if (!user) {
+                router.push('/auth/sign-in');
+                return;
+              }
+              setShowReviewForm((v) => !v);
+            }}>
+            <Text style={styles.externalLinkText}>
+              {user ? (showReviewForm ? 'Cancel' : 'Write a Review') : 'Sign in to Review'}
+            </Text>
+          </Pressable>
+        </View>
+
+        <Text style={styles.policyNotice}>
+          Original KhanaScene reviews are moderated before publication and are kept separate from
+          Google ratings.
+        </Text>
+
+        {showReviewForm ? (
+          <View style={styles.reviewFormBox}>
+            <Text style={styles.authorName}>Your Overall Rating (1 to 5)</Text>
+            <View style={styles.starSelectorRow}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Pressable
+                  key={star}
+                  onPress={() => setOverallRating(star)}
+                  style={[
+                    styles.starOption,
+                    overallRating === star && styles.starOptionActive,
+                  ]}>
+                  <Text
+                    style={[
+                      styles.starOptionText,
+                      overallRating === star && styles.starOptionTextActive,
+                    ]}>
+                    {star} ★
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+            <TextInput
+              value={reviewText}
+              onChangeText={setReviewText}
+              placeholder="Share your honest experience (food, service, price, ambience)..."
+              placeholderTextColor={BrandColors.mutedGrey}
+              multiline
+              style={styles.reviewInput}
+            />
+            <Pressable
+              onPress={async () => {
+                const res = await communityRepository.submitReview({
+                  googlePlaceId: item.placeId,
+                  restaurantRecordId: khanaSceneData?.id,
+                  overallRating,
+                  reviewText,
+                });
+                setReviewFeedback(res.message);
+                if (res.ok) {
+                  setReviewText('');
+                  setShowReviewForm(false);
+                }
+              }}
+              style={styles.primaryActionBtn}>
+              <Text style={styles.primaryActionText}>Submit for Moderation</Text>
+            </Pressable>
+          </View>
+        ) : null}
+
+        {reviewFeedback ? (
+          <Text style={styles.pickCallout}>{reviewFeedback}</Text>
+        ) : null}
+        {reportFeedback ? (
+          <Text style={styles.pickCallout}>{reportFeedback}</Text>
+        ) : null}
+
+        {khanaSceneData?.khanaSceneReviews && khanaSceneData.khanaSceneReviews.length > 0 ? (
+          khanaSceneData.khanaSceneReviews.map((ksRev) => (
             <View key={ksRev.id} style={styles.reviewItem}>
-              <Text style={styles.authorName}>
-                {ksRev.authorDisplayName} • {ksRev.overallRating}/5
-              </Text>
+              <View style={styles.sectionHeaderRow}>
+                <Text style={styles.authorName}>
+                  {ksRev.authorDisplayName} • {ksRev.overallRating}/5
+                </Text>
+                <Pressable
+                  onPress={async () => {
+                    if (!user) {
+                      router.push('/auth/sign-in');
+                      return;
+                    }
+                    const rep = await communityRepository.reportReview({
+                      reviewId: ksRev.id,
+                      reason: 'Flagged by user for moderation review',
+                    });
+                    setReportFeedback(rep.message);
+                  }}>
+                  <Text style={styles.sourceLink}>Report</Text>
+                </Pressable>
+              </View>
               <Text style={styles.reviewTime}>Visited: {ksRev.visitDate ?? 'Unspecified'}</Text>
               <Text style={styles.reviewBody}>{ksRev.reviewText}</Text>
             </View>
-          ))}
-        </View>
-      ) : null}
+          ))
+        ) : (
+          <Text style={styles.emptyNotice}>
+            No approved KhanaScene community reviews for this restaurant yet.
+          </Text>
+        )}
+      </View>
 
       <GoogleAttributionBadge notice="Google ratings, review counts and review snippets are provided by Google Maps. Prices and KhanaScene Picks are maintained independently by KhanaScene." />
     </ScrollView>
@@ -675,5 +789,46 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.xs,
     color: BrandColors.charcoal,
     lineHeight: 18,
+  },
+  reviewFormBox: {
+    backgroundColor: BrandColors.warmCream,
+    padding: Spacing.md,
+    borderRadius: Radii.md,
+    gap: Spacing.sm,
+  },
+  starSelectorRow: {
+    flexDirection: 'row',
+    gap: Spacing.xs,
+  },
+  starOption: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 6,
+    borderRadius: Radii.pill,
+    backgroundColor: BrandColors.white,
+    borderWidth: 1,
+    borderColor: BrandColors.borderSubtle,
+  },
+  starOptionActive: {
+    backgroundColor: BrandColors.primaryGreen,
+    borderColor: BrandColors.primaryGreen,
+  },
+  starOptionText: {
+    fontSize: Typography.sizes.xs,
+    fontWeight: '700',
+    color: BrandColors.charcoal,
+  },
+  starOptionTextActive: {
+    color: BrandColors.white,
+  },
+  reviewInput: {
+    backgroundColor: BrandColors.white,
+    borderRadius: Radii.md,
+    borderWidth: 1,
+    borderColor: BrandColors.borderSubtle,
+    padding: Spacing.md,
+    minHeight: 80,
+    fontSize: Typography.sizes.sm,
+    color: BrandColors.charcoal,
+    textAlignVertical: 'top',
   },
 });

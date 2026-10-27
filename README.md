@@ -41,5 +41,6 @@ npm test
 
 - [Setup Guide](docs/setup.md)
 - [Architecture Overview](docs/architecture.md)
-- [API Configuration & Policy Compliance](docs/api-configuration.md)
+- [API Configuration, Policy Compliance & $0.00/Month Strategy](docs/api-configuration.md)
+- [Privacy Policy & Store Disclosures](docs/privacy-and-store-disclosures.md)
 - [Build & Deployment Guide (Windows + EAS)](docs/deployment.md)

@@ -23,6 +23,10 @@ It is strictly a discovery and comparison guide — **not** a food delivery plat
    - KhanaScene user reviews use a deterministic Bayesian-adjusted ranking formula:
      $$\text{Adjusted Score} = \frac{v}{v + m} R + \frac{m}{v + m} C$$
    - Google ratings and KhanaScene ratings are never merged into a single synthetic score.
+5. **3-Layer "Zero-Cost Until Revenue" Strategy ($0.00/Month Guarantee)**
+   - **Layer 1 (Supabase-First)**: Home screen sections, categories, and initial search queries hit KhanaScene's Supabase PostgreSQL database first at $0 cost.
+   - **Layer 2 (Hard Free-Tier Circuit Breaker)**: Live Google Places API calls pass through `supabase/functions/places-proxy`, which enforces an atomic monthly hard limit (`850 calls/month`, safely inside Google's 1,000 free monthly allowance) via `public.api_usage_counters`.
+   - **Layer 3 (Free Google Maps Deep Links)**: Directions, full reviews, and fallback searches use free, unlimited Google Maps URLs (`https://www.google.com/maps/search/?api=1&query=...`).
 
 ## 3. Directory Structure
 

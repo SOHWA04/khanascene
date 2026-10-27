@@ -5,6 +5,7 @@ import React, { useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
+import { useAuthStore } from '@/stores/useAuthStore';
 import { useSavedStore } from '@/stores/useSavedStore';
 import { BrandColors } from '@/theme';
 
@@ -35,10 +36,12 @@ const KhanaSceneNavigationTheme = {
 
 export default function RootLayout() {
   const hydrateSavedPlaces = useSavedStore((s) => s.hydrateSavedPlaces);
+  const initializeAuth = useAuthStore((s) => s.initializeAuth);
 
   useEffect(() => {
     hydrateSavedPlaces();
-  }, [hydrateSavedPlaces]);
+    initializeAuth();
+  }, [hydrateSavedPlaces, initializeAuth]);
 
   return (
     <QueryClientProvider client={queryClient}>

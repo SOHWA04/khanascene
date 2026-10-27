@@ -1,7 +1,13 @@
 import { APP_CONFIG } from '@/config';
+import { supabaseMetadataRepository } from '@/repositories/supabaseMetadataRepository';
 import { DEV_RESTAURANT_FIXTURES } from '@/services/google-places/devFixtures';
 import {
+  buildFreeGoogleMapsSearchUrl,
+  googlePlacesService,
+} from '@/services/google-places/placesService';
+import {
   CitySlug,
+  KhanaSceneRecord,
   RestaurantDiscoveryItem,
   SearchFilters,
   SortOption,
@@ -24,6 +30,88 @@ export function calculateHaversineDistanceKm(
       Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return Math.round(R * c * 10) / 10;
+}
+
+/**
+ * Converts a KhanaScene-owned Supabase record into a `RestaurantDiscoveryItem`
+ * so Layer 1 (Supabase-First $0 discovery) works even without calling Google Places.
+ */
+export function mapKhanaSceneRecordToDiscoveryItem(
+  record: KhanaSceneRecord
+): RestaurantDiscoveryItem {
+  const placeId = record.googlePlaceId ?? `ks-${record.id}`;
+  const freeMapsUrl = buildFreeGoogleMapsSearchUrl(record.name, record.cityId);
+  const location =
+    record.latitude != null && record.longitude != null
+      ? { latitude: record.latitude, longitude: record.longitude }
+      : undefined;
+
+  return {
+    placeId,
+    googleData: {
+      placeId,
+      name: record.name,
+      formattedAddress: record.address,
+      shortAddress: record.address,
+      cityId: record.cityId,
+      primaryCategory: record.cuisines.join(', ') || 'Restaurant',
+      nationalPhoneNumber: record.phoneNumber,
+      location,
+      googleMapsUri: freeMapsUrl,
+      googleMapsDirectionsUri: location
+        ? `https://www.google.com/maps/dir/?api=1&destination=${location.latitude},${location.longitude}`
+        : undefined,
+    },
+    khanaSceneData: record,
+    isFixtureData: false,
+  };
+}
+
+/**
+ * Deduplicates and merges Google Places summaries with KhanaScene-owned records
+ * by matching `google_place_id` or normalized name + city.
+ */
+export function mergeAndDeduplicateDiscoveryItems(
+  primaryItems: RestaurantDiscoveryItem[],
+  secondaryItems: RestaurantDiscoveryItem[]
+): RestaurantDiscoveryItem[] {
+  const mapByPlaceId = new Map<string, RestaurantDiscoveryItem>();
+  const seenNormalizedNames = new Set<string>();
+
+  for (const item of primaryItems) {
+    mapByPlaceId.set(item.placeId, item);
+    const normKey = `${(item.googleData.cityId ?? '').toLowerCase()}::${item.googleData.name
+      .trim()
+      .toLowerCase()}`;
+    seenNormalizedNames.add(normKey);
+  }
+
+  for (const candidate of secondaryItems) {
+    const existingById = mapByPlaceId.get(candidate.placeId);
+    if (existingById) {
+      mapByPlaceId.set(candidate.placeId, {
+        ...existingById,
+        googleData: {
+          ...existingById.googleData,
+          ...candidate.googleData,
+        },
+        khanaSceneData: existingById.khanaSceneData ?? candidate.khanaSceneData,
+      });
+      continue;
+    }
+
+    const normKey = `${(
+      candidate.googleData.cityId ?? ''
+    ).toLowerCase()}::${candidate.googleData.name.trim().toLowerCase()}`;
+    if (seenNormalizedNames.has(normKey)) {
+      continue;
+    }
+
+    mapByPlaceId.set(candidate.placeId, candidate);
+    seenNormalizedNames.add(normKey);
+  }
+
+  return Array.from(mapByPlaceId.values());
 }
 
 export function filterAndSortRestaurants(
@@ -99,14 +187,22 @@ export function filterAndSortRestaurants(
         .join(' ')
         .toLowerCase();
 
-      // Match tokens (ignoring common stop words like "in", "islamabad", "rawalpindi", "restaurants")
       const tokens = normalizedQuery
         .split(/\s+/)
         .filter(
           (t) =>
-            !['in', 'near', 'me', 'under', 'rs', 'restaurants', 'restaurant', 'food', 'islamabad', 'rawalpindi'].includes(
-              t
-            )
+            ![
+              'in',
+              'near',
+              'me',
+              'under',
+              'rs',
+              'restaurants',
+              'restaurant',
+              'food',
+              'islamabad',
+              'rawalpindi',
+            ].includes(t)
         );
 
       if (tokens.length > 0) {
@@ -137,7 +233,8 @@ export function sortRestaurants(
       );
     case 'most_reviewed':
       return copy.sort(
-        (a, b) => (b.googleData.googleReviewCount ?? -1) - (a.googleData.googleReviewCount ?? -1)
+        (a, b) =>
+          (b.googleData.googleReviewCount ?? -1) - (a.googleData.googleReviewCount ?? -1)
       );
     case 'lowest_price':
       return copy.sort((a, b) => {
@@ -175,24 +272,29 @@ export function sortRestaurants(
 }
 
 class RestaurantRepository {
-  private getBaseDataset(): RestaurantDiscoveryItem[] {
+  private async getBaseDatasetForCity(cityId: CitySlug): Promise<RestaurantDiscoveryItem[]> {
     if (APP_CONFIG.dataMode === 'mock') {
-      return DEV_RESTAURANT_FIXTURES;
+      return DEV_RESTAURANT_FIXTURES.filter(
+        (item) => (item.googleData.cityId ?? item.khanaSceneData?.cityId) === cityId
+      );
     }
-    // Live mode will query Supabase Edge Function in Phase 4.
-    // Never return fake fixtures when live mode is configured.
-    return [];
+
+    // Layer 1 (Live Mode): Query Supabase PostgreSQL first ($0 cost, zero background Google calls)
+    const supabaseRecords = await supabaseMetadataRepository.getVerifiedRecordsByCity(cityId);
+    return supabaseRecords.map(mapKhanaSceneRecordToDiscoveryItem);
   }
 
+  /**
+   * Layer 1: Home screen sections NEVER trigger background Google Places searches.
+   * Uses Supabase records in live mode, or clearly marked fixtures in mock mode.
+   */
   async getExploreSections(cityId: CitySlug): Promise<{
     khanaScenePicks: RestaurantDiscoveryItem[];
     nearbyOrCityPlaces: RestaurantDiscoveryItem[];
     budgetFriendly: RestaurantDiscoveryItem[];
     isMockMode: boolean;
   }> {
-    const allForCity = this.getBaseDataset().filter(
-      (item) => (item.googleData.cityId ?? item.khanaSceneData?.cityId) === cityId
-    );
+    const allForCity = await this.getBaseDatasetForCity(cityId);
 
     return {
       khanaScenePicks: allForCity.filter((i) => i.khanaSceneData?.isKhanaScenePick === true),
@@ -206,25 +308,121 @@ class RestaurantRepository {
     };
   }
 
+  /**
+   * Layer 1 + Layer 2 Search:
+   * 1. Queries local/Supabase records first ($0 cost).
+   * 2. If in `live` mode and either `includeLiveGooglePlaces` is requested or Supabase has 0 matches
+   *    for a non-empty query, calls the hard-capped `places-proxy` Edge Function.
+   */
   async searchRestaurants(
     filters: SearchFilters,
-    userCoordinates?: { latitude: number; longitude: number } | null
-  ): Promise<RestaurantDiscoveryItem[]> {
-    const base = this.getBaseDataset();
-    return filterAndSortRestaurants(base, filters, userCoordinates);
+    userCoordinates?: { latitude: number; longitude: number } | null,
+    options?: { includeLiveGooglePlaces?: boolean }
+  ): Promise<{
+    items: RestaurantDiscoveryItem[];
+    quotaPaused: boolean;
+    quotaMessage?: string;
+  }> {
+    const base = await this.getBaseDatasetForCity(filters.cityId);
+    const localMatches = filterAndSortRestaurants(base, filters, userCoordinates);
+
+    if (APP_CONFIG.dataMode === 'mock') {
+      return {
+        items: localMatches,
+        quotaPaused: false,
+      };
+    }
+
+    const shouldCallGoogle =
+      Boolean(options?.includeLiveGooglePlaces) ||
+      (localMatches.length === 0 && filters.query.trim().length >= 2);
+
+    if (!shouldCallGoogle) {
+      return {
+        items: localMatches,
+        quotaPaused: false,
+      };
+    }
+
+    try {
+      const queryText =
+        filters.query.trim() ||
+        filters.cuisineSlug ||
+        `Restaurants in ${filters.cityId === 'rawalpindi' ? 'Rawalpindi' : 'Islamabad'}`;
+
+      const googleRes = await googlePlacesService.textSearch({
+        textQuery: queryText,
+        cityId: filters.cityId,
+        openNow: filters.openNowOnly,
+      });
+
+      const googleItems: RestaurantDiscoveryItem[] = googleRes.places.map((g) => ({
+        placeId: g.placeId,
+        googleData: g,
+        isFixtureData: false,
+      }));
+
+      const merged = mergeAndDeduplicateDiscoveryItems(localMatches, googleItems);
+      return {
+        items: filterAndSortRestaurants(merged, filters, userCoordinates),
+        quotaPaused: googleRes.quotaPaused,
+        quotaMessage: googleRes.message,
+      };
+    } catch {
+      return {
+        items: localMatches,
+        quotaPaused: false,
+      };
+    }
   }
 
   async getRestaurantByPlaceId(placeId: string): Promise<RestaurantDiscoveryItem | null> {
-    const found = this.getBaseDataset().find((item) => item.placeId === placeId);
-    return found ?? null;
+    if (APP_CONFIG.dataMode === 'mock') {
+      const found = DEV_RESTAURANT_FIXTURES.find((item) => item.placeId === placeId);
+      return found ?? null;
+    }
+
+    // Check Supabase records first ($0 cost)
+    const isbRecords = await supabaseMetadataRepository.getVerifiedRecordsByCity('islamabad');
+    const rwpRecords = await supabaseMetadataRepository.getVerifiedRecordsByCity('rawalpindi');
+    const allSupabase = [...isbRecords, ...rwpRecords];
+    const matchedRecord = allSupabase.find(
+      (r) => r.googlePlaceId === placeId || `ks-${r.id}` === placeId
+    );
+
+    // If it's a Google Place ID, fetch fresh details through the hard-capped Edge Function
+    if (!placeId.startsWith('ks-')) {
+      try {
+        const detailRes = await googlePlacesService.getPlaceDetails(
+          placeId,
+          matchedRecord?.cityId
+        );
+        if (detailRes.place) {
+          return {
+            placeId,
+            googleData: detailRes.place,
+            khanaSceneData: matchedRecord,
+            isFixtureData: false,
+          };
+        }
+      } catch {
+        // Fall through to Supabase record if offline or quota paused
+      }
+    }
+
+    if (matchedRecord) {
+      return mapKhanaSceneRecordToDiscoveryItem(matchedRecord);
+    }
+
+    return null;
   }
 
   async getRestaurantsByPlaceIds(placeIds: string[]): Promise<RestaurantDiscoveryItem[]> {
     if (placeIds.length === 0) return [];
-    const base = this.getBaseDataset();
-    return placeIds
-      .map((id) => base.find((item) => item.placeId === id))
-      .filter((item): item is RestaurantDiscoveryItem => item != null);
+    const results = await Promise.all(
+      placeIds.map((id) => this.getRestaurantByPlaceId(id))
+    );
+    return results.filter((item): item is RestaurantDiscoveryItem => item != null);
   }
 }
 

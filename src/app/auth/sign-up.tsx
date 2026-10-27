@@ -3,6 +3,8 @@ import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-
 import { router } from 'expo-router';
 
 import { KhanaSceneLogo } from '@/components/KhanaSceneLogo';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { useSavedStore } from '@/stores/useSavedStore';
 import { BrandColors, Radii, Spacing, Typography } from '@/theme';
 
 export default function SignUpScreen() {
@@ -11,14 +13,21 @@ export default function SignUpScreen() {
   const [password, setPassword] = useState('');
   const [feedback, setFeedback] = useState<string | null>(null);
 
-  const handleSignUp = () => {
-    if (!displayName.trim() || !email.trim() || password.length < 8) {
-      setFeedback('Please provide a display name, valid email and a password of at least 8 characters.');
+  const { signUpWithEmail, isSubmitting } = useAuthStore();
+  const syncWithCloudForUser = useSavedStore((s) => s.syncWithCloudForUser);
+
+  const handleSignUp = async () => {
+    setFeedback(null);
+    const result = await signUpWithEmail(displayName, email, password);
+    if (!result.ok) {
+      setFeedback(result.error ?? 'Account creation failed.');
       return;
     }
-    setFeedback(
-      'Account registration will connect to Supabase Auth in Phase 3 once your project credentials are set.'
-    );
+    const currentUser = useAuthStore.getState().user;
+    if (currentUser) {
+      await syncWithCloudForUser(currentUser.id);
+    }
+    router.back();
   };
 
   return (
@@ -70,8 +79,13 @@ export default function SignUpScreen() {
 
         {feedback ? <Text style={styles.feedbackText}>{feedback}</Text> : null}
 
-        <Pressable onPress={handleSignUp} style={styles.primaryButton}>
-          <Text style={styles.primaryButtonText}>Create Account</Text>
+        <Pressable
+          disabled={isSubmitting}
+          onPress={handleSignUp}
+          style={[styles.primaryButton, isSubmitting && styles.buttonDisabled]}>
+          <Text style={styles.primaryButtonText}>
+            {isSubmitting ? 'Creating Account...' : 'Create Account'}
+          </Text>
         </Pressable>
 
         <Pressable onPress={() => router.replace('/auth/sign-in')} style={styles.switchLink}>
@@ -135,6 +149,9 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: Radii.md,
     alignItems: 'center',
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
   primaryButtonText: {
     color: BrandColors.white,
