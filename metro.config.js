@@ -4,7 +4,8 @@ const { getDefaultConfig } = require('expo/metro-config');
 /** @type {import('expo/metro-config').MetroConfig} */
 const config = getDefaultConfig(__dirname);
 
-// Ensure CommonJS resolution is preferred over ESM `.mjs` files that use `import.meta.env` (e.g. Zustand v5 on Web)
-config.resolver.unstable_conditionNames = ['require', 'default', 'browser'];
+// Disable package exports resolution so ESM `.mjs` files containing `import.meta.env`
+// (such as `zustand/esm/*.mjs`) resolve to CommonJS `.js` on Expo Web.
+config.resolver.unstable_enablePackageExports = false;
 
 module.exports = config;
