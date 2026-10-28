@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Linking,
   Pressable,
@@ -12,6 +12,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 
+import { BillEstimatorModal } from '@/components/BillEstimatorModal';
 import { ComparisonTrayBar } from '@/components/ComparisonTrayBar';
 import { GoogleAttributionBadge } from '@/components/GoogleAttributionBadge';
 import {
@@ -19,11 +20,13 @@ import {
   ErrorStateBlock,
   LoadingStateBlock,
 } from '@/components/StateFeedbackBlocks';
+import { WhatsAppInquiryModal } from '@/components/WhatsAppInquiryModal';
 import { communityRepository } from '@/repositories/communityRepository';
 import { restaurantRepository } from '@/repositories/restaurantRepository';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useComparisonStore } from '@/stores/useComparisonStore';
 import { useSavedStore } from '@/stores/useSavedStore';
+import { BillItem } from '@/utils/billEstimator';
 import {
   calculateBayesianScore,
   formatGooglePriceLevel,
@@ -64,10 +67,21 @@ export default function RestaurantDetailScreen() {
   const [claimFeedback, setClaimFeedback] = useState<string | null>(null);
   const [isSubmittingClaim, setIsSubmittingClaim] = useState(false);
 
+  // WhatsApp table inquiry state
+  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
+
+  // Bill & tax estimator state
+  const [showBillEstimator, setShowBillEstimator] = useState(false);
+  const [estimatorInitialItems, setEstimatorInitialItems] = useState<BillItem[]>([]);
+
   const { data: item, isLoading, isError, refetch } = useQuery({
     queryKey: ['restaurant-detail', resolvedPlaceId],
     queryFn: () => restaurantRepository.getRestaurantByPlaceId(resolvedPlaceId),
   });
+
+  const allMenuItems = useMemo(() => {
+    return item?.khanaSceneData?.menus?.flatMap((m) => m.items) ?? [];
+  }, [item?.khanaSceneData?.menus]);
 
   if (isLoading) {
     return (
@@ -108,6 +122,7 @@ export default function RestaurantDetailScreen() {
   }
 
   const { googleData, khanaSceneData, isFixtureData } = item;
+  const contactPhone = khanaSceneData?.phoneNumber || googleData.nationalPhoneNumber;
 
   const openDirections = () => {
     const uri =
@@ -238,11 +253,34 @@ export default function RestaurantDetailScreen() {
           </View>
         </View>
 
-        {/* Action Buttons — Only offer Call / Website when real data exists */}
+        {/* Action Buttons — Only offer Call / Website / WhatsApp when real data exists */}
         <View style={styles.actionButtonsWrap}>
+          {contactPhone ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Inquire table availability via WhatsApp"
+              onPress={() => setShowWhatsAppModal(true)}
+              style={styles.whatsAppActionBtn}>
+              <Ionicons name="logo-whatsapp" size={16} color={BrandColors.white} />
+              <Text style={styles.whatsAppActionText}>Book via WhatsApp</Text>
+            </Pressable>
+          ) : null}
+
           <Pressable onPress={openDirections} style={styles.primaryActionBtn}>
             <Ionicons name="navigate" size={16} color={BrandColors.white} />
             <Text style={styles.primaryActionText}>Directions</Text>
+          </Pressable>
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Estimate Bill & Taxes"
+            onPress={() => {
+              setEstimatorInitialItems([]);
+              setShowBillEstimator(true);
+            }}
+            style={styles.secondaryActionBtn}>
+            <Ionicons name="calculator-outline" size={16} color={BrandColors.deepForestGreen} />
+            <Text style={styles.secondaryActionText}>Estimate Bill</Text>
           </Pressable>
 
           {googleData.nationalPhoneNumber ? (
@@ -314,7 +352,95 @@ export default function RestaurantDetailScreen() {
             ? 'Verified Family Dining Area'
             : 'Unverified / Not specified'}
         </Text>
+        <Text style={styles.bodyText}>
+          Parking:{' '}
+          {khanaSceneData?.hasValet
+            ? '🚗 Valet Parking Available'
+            : khanaSceneData?.parkingType === 'dedicated_lot'
+              ? '🅿️ Dedicated Parking Lot'
+              : khanaSceneData?.parkingType === 'street_moderate'
+                ? 'Street Parking (Usually Available)'
+                : khanaSceneData?.parkingType === 'street_crowded'
+                  ? '⚠️ Crowded Street Parking (Plan Ahead)'
+                  : 'Parking information unavailable'}
+        </Text>
+
+        {/* Hero Dishes Callout */}
+        {khanaSceneData?.heroDishes && khanaSceneData.heroDishes.length > 0 ? (
+          <View style={styles.heroDishesCard}>
+            <View style={styles.heroDishesCardHeader}>
+              <Ionicons name="sparkles" size={13} color="#92400E" />
+              <Text style={styles.heroDishesCardTitle}>MUST-TRY HERO DISHES</Text>
+            </View>
+            <View style={styles.heroDishesChipsWrap}>
+              {khanaSceneData.heroDishes.map((dish) => (
+                <View key={dish} style={styles.heroDishChip}>
+                  <Text style={styles.heroDishChipText}>⭐ {dish}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        ) : null}
       </View>
+
+      {/* Section: Bank Card Discounts & Deals */}
+      {khanaSceneData?.cardDeals && khanaSceneData.cardDeals.length > 0 ? (
+        <View style={styles.sectionCard}>
+          <View style={styles.sectionHeaderRow}>
+            <View style={styles.dealSectionHeader}>
+              <Ionicons name="card" size={18} color="#B45309" />
+              <Text style={styles.sectionTitle}>Bank Card Discounts</Text>
+            </View>
+            <View style={styles.dealCountBadge}>
+              <Text style={styles.dealCountBadgeText}>
+                {khanaSceneData.cardDeals.length} active {khanaSceneData.cardDeals.length === 1 ? 'deal' : 'deals'}
+              </Text>
+            </View>
+          </View>
+
+          <Text style={styles.bodyText}>
+            Avail these verified discounts by paying with eligible debit/credit cards at checkout.
+          </Text>
+
+          <View style={styles.dealList}>
+            {khanaSceneData.cardDeals.map((deal) => (
+              <View key={deal.id} style={styles.dealCard}>
+                <View style={styles.dealTopRow}>
+                  <View style={styles.dealBankBadge}>
+                    <Text style={styles.dealBankText}>{deal.bankName}</Text>
+                  </View>
+                  <View style={styles.dealPercentBadge}>
+                    <Text style={styles.dealPercentText}>{deal.discountPercentage}% OFF</Text>
+                  </View>
+                </View>
+
+                <Text style={styles.dealTierText}>Tier: {deal.cardTier}</Text>
+
+                <View style={styles.dealMetaRow}>
+                  <Ionicons name="calendar-outline" size={13} color={BrandColors.mutedGrey} />
+                  <Text style={styles.dealMetaText}>
+                    Days: {deal.applicableDays.length === 7 ? 'All Days (Mon-Sun)' : deal.applicableDays.join(', ')}
+                  </Text>
+                </View>
+
+                {deal.maxDiscountPkr ? (
+                  <View style={styles.dealMetaRow}>
+                    <Ionicons name="wallet-outline" size={13} color={BrandColors.mutedGrey} />
+                    <Text style={styles.dealMetaText}>
+                      Max discount: PKR {deal.maxDiscountPkr.toLocaleString()}
+                      {deal.minSpendPkr ? ` • Min spend: PKR ${deal.minSpendPkr.toLocaleString()}` : ''}
+                    </Text>
+                  </View>
+                ) : null}
+
+                {deal.terms ? (
+                  <Text style={styles.dealTermsText}>*{deal.terms}</Text>
+                ) : null}
+              </View>
+            ))}
+          </View>
+        </View>
+      ) : null}
 
       {/* Section 2: Google Reviews */}
       <View style={styles.sectionCard}>
@@ -383,6 +509,29 @@ export default function RestaurantDetailScreen() {
           </Pressable>
         </View>
 
+        {/* Estimator Banner Callout */}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Open Bill, Tax and Bank Discount Estimator"
+          onPress={() => {
+            setEstimatorInitialItems([]);
+            setShowBillEstimator(true);
+          }}
+          style={styles.estimatorBannerBtn}>
+          <View style={styles.estimatorBannerLeft}>
+            <View style={styles.estimatorBannerIcon}>
+              <Ionicons name="calculator" size={16} color={BrandColors.deepForestGreen} />
+            </View>
+            <View style={styles.estimatorBannerTextWrap}>
+              <Text style={styles.estimatorBannerTitle}>Estimate Bill, Taxes & Bank Deals</Text>
+              <Text style={styles.estimatorBannerSubtitle}>
+                Add dishes, calculate 16% GST, apply card discounts & split bill
+              </Text>
+            </View>
+          </View>
+          <Ionicons name="chevron-forward" size={16} color={BrandColors.primaryGreen} />
+        </Pressable>
+
         {khanaSceneData?.menus && khanaSceneData.menus.length > 0 ? (
           khanaSceneData.menus.map((menu) => (
             <View key={menu.id} style={styles.menuBlock}>
@@ -392,14 +541,42 @@ export default function RestaurantDetailScreen() {
               {menu.items.map((menuItem) => (
                 <View key={menuItem.id} style={styles.menuItemRow}>
                   <View style={styles.menuItemTextCol}>
-                    <Text style={styles.menuItemName}>{menuItem.name}</Text>
+                    <View style={styles.menuItemNameRow}>
+                      <Text style={styles.menuItemName}>{menuItem.name}</Text>
+                      {menuItem.isSignature ? (
+                        <View style={styles.signatureBadge}>
+                          <Ionicons name="star" size={10} color="#B45309" />
+                          <Text style={styles.signatureBadgeText}>Signature</Text>
+                        </View>
+                      ) : null}
+                    </View>
                     {menuItem.description ? (
                       <Text style={styles.menuItemDesc}>{menuItem.description}</Text>
                     ) : null}
                   </View>
-                  <Text style={styles.menuItemPrice}>
-                    Rs {menuItem.pricePkr.toLocaleString('en-PK')}
-                  </Text>
+                  <View style={styles.menuItemPriceWrap}>
+                    <Text style={styles.menuItemPrice}>
+                      Rs {menuItem.pricePkr.toLocaleString('en-PK')}
+                    </Text>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={`Estimate ${menuItem.name}`}
+                      onPress={() => {
+                        setEstimatorInitialItems([
+                          {
+                            id: menuItem.id,
+                            name: menuItem.name,
+                            pricePkr: menuItem.pricePkr,
+                            quantity: 1,
+                          },
+                        ]);
+                        setShowBillEstimator(true);
+                      }}
+                      style={styles.menuItemAddBtn}>
+                      <Ionicons name="add" size={12} color={BrandColors.deepForestGreen} />
+                      <Text style={styles.menuItemAddText}>Estimate</Text>
+                    </Pressable>
+                  </View>
                 </View>
               ))}
             </View>
@@ -706,6 +883,24 @@ export default function RestaurantDetailScreen() {
       </View>
 
       <GoogleAttributionBadge notice="Google ratings, review counts and review snippets are provided by Google Maps. Prices and KhanaScene Picks are maintained independently by KhanaScene." />
+
+      <WhatsAppInquiryModal
+        visible={showWhatsAppModal}
+        onClose={() => setShowWhatsAppModal(false)}
+        restaurantName={googleData.name}
+        phoneNumber={contactPhone}
+      />
+
+      {showBillEstimator ? (
+        <BillEstimatorModal
+          visible={showBillEstimator}
+          onClose={() => setShowBillEstimator(false)}
+          restaurantName={googleData.name}
+          availableMenuItems={allMenuItems}
+          availableCardDeals={khanaSceneData?.cardDeals ?? []}
+          initialItems={estimatorInitialItems}
+        />
+      ) : null}
     </ScrollView>
   );
 }
@@ -817,6 +1012,20 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     marginTop: 4,
   },
+  whatsAppActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#25D366',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: Radii.pill,
+  },
+  whatsAppActionText: {
+    color: BrandColors.white,
+    fontSize: Typography.sizes.xs,
+    fontWeight: '700',
+  },
   primaryActionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -870,6 +1079,82 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.md,
     fontWeight: '800',
     color: BrandColors.deepForestGreen,
+  },
+  dealSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  dealCountBadge: {
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: Radii.pill,
+  },
+  dealCountBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#92400E',
+  },
+  dealList: {
+    gap: Spacing.sm,
+    marginTop: 4,
+  },
+  dealCard: {
+    backgroundColor: BrandColors.warmCream,
+    borderRadius: Radii.md,
+    padding: Spacing.md,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: BrandColors.borderSubtle,
+  },
+  dealTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  dealBankBadge: {
+    backgroundColor: BrandColors.deepForestGreen,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: Radii.sm,
+  },
+  dealBankText: {
+    color: BrandColors.white,
+    fontSize: Typography.sizes.xs,
+    fontWeight: '700',
+  },
+  dealPercentBadge: {
+    backgroundColor: '#DCFCE7',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: Radii.pill,
+  },
+  dealPercentText: {
+    color: '#15803D',
+    fontSize: Typography.sizes.xs,
+    fontWeight: '800',
+  },
+  dealTierText: {
+    fontSize: Typography.sizes.xs,
+    fontWeight: '700',
+    color: BrandColors.charcoal,
+  },
+  dealMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  dealMetaText: {
+    fontSize: 11,
+    color: BrandColors.mutedGrey,
+    fontWeight: '500',
+  },
+  dealTermsText: {
+    fontSize: 10,
+    fontStyle: 'italic',
+    color: BrandColors.mutedGrey,
+    marginTop: 2,
   },
   externalLinkText: {
     fontSize: Typography.sizes.xs,
@@ -970,6 +1255,67 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: BrandColors.charcoal,
   },
+  menuItemNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  signatureBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: Radii.pill,
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+  },
+  signatureBadgeText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#B45309',
+    textTransform: 'uppercase',
+  },
+  heroDishesCard: {
+    backgroundColor: BrandColors.warmCream,
+    borderRadius: Radii.md,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: BrandColors.borderSubtle,
+    gap: 6,
+    marginTop: 4,
+  },
+  heroDishesCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  heroDishesCardTitle: {
+    fontSize: Typography.sizes.xs,
+    fontWeight: '800',
+    color: '#92400E',
+    letterSpacing: 0.5,
+  },
+  heroDishesChipsWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  heroDishChip: {
+    backgroundColor: BrandColors.white,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: Radii.pill,
+    borderWidth: 1,
+    borderColor: BrandColors.borderSubtle,
+  },
+  heroDishChipText: {
+    fontSize: Typography.sizes.xs,
+    fontWeight: '700',
+    color: BrandColors.charcoal,
+  },
   menuItemDesc: {
     fontSize: Typography.sizes.xs,
     color: BrandColors.mutedGrey,
@@ -978,6 +1324,64 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.sm,
     fontWeight: '800',
     color: BrandColors.primaryGreen,
+  },
+  menuItemPriceWrap: {
+    alignItems: 'flex-end',
+    gap: 4,
+  },
+  menuItemAddBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: BrandColors.lightGreen,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: Radii.pill,
+  },
+  menuItemAddText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: BrandColors.deepForestGreen,
+  },
+  estimatorBannerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: BrandColors.lightGreen,
+    padding: Spacing.md,
+    borderRadius: Radii.md,
+    borderWidth: 1,
+    borderColor: '#C8E6C9',
+    marginTop: 4,
+    marginBottom: Spacing.sm,
+  },
+  estimatorBannerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    flex: 1,
+    marginRight: Spacing.xs,
+  },
+  estimatorBannerIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: Radii.pill,
+    backgroundColor: BrandColors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  estimatorBannerTextWrap: {
+    flex: 1,
+  },
+  estimatorBannerTitle: {
+    fontSize: Typography.sizes.xs,
+    fontWeight: '800',
+    color: BrandColors.deepForestGreen,
+  },
+  estimatorBannerSubtitle: {
+    fontSize: 11,
+    color: BrandColors.deepForestGreen,
+    marginTop: 1,
   },
   hoursLine: {
     fontSize: Typography.sizes.xs,

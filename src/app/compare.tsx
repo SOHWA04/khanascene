@@ -18,6 +18,7 @@ import {
 import { useComparisonStore } from '@/stores/useComparisonStore';
 import { usePreferencesStore } from '@/stores/usePreferencesStore';
 import { formatGooglePriceLevel, formatPkrRange } from '@/utils/ranking';
+import { buildGroupVoteMessage, openWhatsAppShare } from '@/utils/whatsapp';
 import { BrandColors, Radii, Spacing, Typography } from '@/theme';
 
 export default function CompareScreen() {
@@ -27,12 +28,42 @@ export default function CompareScreen() {
     clearComparison,
   } = useComparisonStore();
   const { userCoordinates } = usePreferencesStore();
+  const [shareNotice, setShareNotice] = React.useState<string | null>(null);
 
   const { data: items = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['compare-restaurants', selectedPlaceIds],
     queryFn: () => restaurantRepository.getRestaurantsByPlaceIds(selectedPlaceIds),
     enabled: selectedPlaceIds.length > 0,
   });
+
+  const handleSharePoll = async () => {
+    if (items.length < 2) return;
+
+    const options = items.map((item) => {
+      const cardSummary =
+        item.khanaSceneData?.cardDeals && item.khanaSceneData.cardDeals.length > 0
+          ? `${item.khanaSceneData.cardDeals[0].bankName} ${item.khanaSceneData.cardDeals[0].discountPercentage}% Off`
+          : null;
+
+      return {
+        name: item.googleData.name,
+        neighbourhood: item.googleData.neighbourhood,
+        rating: item.googleData.googleRating ?? item.khanaSceneData?.khanaSceneRatingAvg,
+        cardDealSummary: cardSummary,
+        hasValet: item.khanaSceneData?.hasValet,
+        heroDishes: item.khanaSceneData?.heroDishes,
+      };
+    });
+
+    const msg = buildGroupVoteMessage(options);
+    const sent = await openWhatsAppShare(msg);
+    if (sent) {
+      setShareNotice('WhatsApp opened! Forward to your group to vote.');
+    } else {
+      setShareNotice('Could not open WhatsApp. Please check if installed.');
+    }
+    setTimeout(() => setShareNotice(null), 4000);
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
@@ -68,6 +99,22 @@ export default function CompareScreen() {
               <Text style={styles.clearAllText}>Clear all</Text>
             </Pressable>
           </View>
+
+          {items.length >= 2 && (
+            <View style={styles.pollCtaContainer}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Share voting poll on WhatsApp"
+                onPress={handleSharePoll}
+                style={styles.pollShareBtn}>
+                <Ionicons name="logo-whatsapp" size={18} color="#25D366" />
+                <Text style={styles.pollShareBtnText}>Share Poll on WhatsApp Group 🗳️</Text>
+              </Pressable>
+              {shareNotice ? (
+                <Text style={styles.shareNoticeText}>{shareNotice}</Text>
+              ) : null}
+            </View>
+          )}
 
           <ScrollView horizontal showsHorizontalScrollIndicator={true}>
             <View style={styles.columnsRow}>
@@ -224,6 +271,40 @@ export default function CompareScreen() {
                         )}
                       </View>
                     </View>
+
+                    {/* Row 10: Bank Card Discounts */}
+                    <View style={styles.metricBlock}>
+                      <Text style={styles.metricLabel}>10. Bank Card Discounts</Text>
+                      <Text style={styles.metricValue}>
+                        {khanaSceneData?.cardDeals && khanaSceneData.cardDeals.length > 0
+                          ? khanaSceneData.cardDeals
+                              .map((d) => `${d.bankName} (${d.discountPercentage}% Off)`)
+                              .join('\n')
+                          : 'No active card deals'}
+                      </Text>
+                    </View>
+
+                    {/* Row 11: Parking & Valet */}
+                    <View style={styles.metricBlock}>
+                      <Text style={styles.metricLabel}>11. Parking & Valet</Text>
+                      <Text style={styles.metricValue}>
+                        {khanaSceneData?.hasValet
+                          ? '🚗 Valet Parking Available'
+                          : khanaSceneData?.parkingType
+                            ? `Parking: ${khanaSceneData.parkingType.replace('_', ' ')}`
+                            : 'Standard parking'}
+                      </Text>
+                    </View>
+
+                    {/* Row 12: Famous / Hero Dishes */}
+                    <View style={styles.metricBlock}>
+                      <Text style={styles.metricLabel}>12. Must-Try Signature Dishes</Text>
+                      <Text style={styles.metricValue}>
+                        {khanaSceneData?.heroDishes && khanaSceneData.heroDishes.length > 0
+                          ? `⭐ ${khanaSceneData.heroDishes.join(', ')}`
+                          : 'Not listed'}
+                      </Text>
+                    </View>
                   </View>
                 );
               })}
@@ -273,6 +354,32 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.xs,
     fontWeight: '700',
     color: BrandColors.errorRed,
+  },
+  pollCtaContainer: {
+    gap: 4,
+  },
+  pollShareBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+    backgroundColor: '#E8F5E9',
+    borderWidth: 1.5,
+    borderColor: '#25D366',
+    borderRadius: Radii.md,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+  },
+  pollShareBtnText: {
+    color: '#075E54',
+    fontSize: Typography.sizes.sm,
+    fontWeight: '700',
+  },
+  shareNoticeText: {
+    fontSize: Typography.sizes.xs,
+    color: BrandColors.primaryGreen,
+    textAlign: 'center',
+    fontWeight: '500',
   },
   columnsRow: {
     flexDirection: 'row',

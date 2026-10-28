@@ -38,6 +38,18 @@ export function RestaurantCard({ item, distanceKm }: RestaurantCardProps) {
     ? formatPkrRange(khanaSceneData?.priceMinPkr, khanaSceneData?.priceMaxPkr)
     : formatGooglePriceLevel(googleData.priceLevel);
 
+  const activeDeals = khanaSceneData?.cardDeals ?? [];
+  const maxDiscount =
+    activeDeals.length > 0
+      ? Math.max(...activeDeals.map((d) => d.discountPercentage))
+      : 0;
+  const uniqueBanks = Array.from(new Set(activeDeals.map((d) => d.bankName)));
+  const bankNames = uniqueBanks.slice(0, 2).join(', ');
+  const cardDealsSummary =
+    activeDeals.length > 0
+      ? `Up to ${maxDiscount}% Off • ${bankNames}${uniqueBanks.length > 2 ? ` +${uniqueBanks.length - 2} more` : ''}`
+      : null;
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -164,6 +176,54 @@ export function RestaurantCard({ item, distanceKm }: RestaurantCardProps) {
             </View>
           )}
         </View>
+
+        {/* Parking Badge */}
+        {khanaSceneData?.hasValet ? (
+          <View style={styles.parkingBadgeRow}>
+            <View style={styles.valetBadge}>
+              <Ionicons name="car" size={11} color="#15803D" />
+              <Text style={styles.valetBadgeText}>Valet Available</Text>
+            </View>
+          </View>
+        ) : khanaSceneData?.parkingType === 'dedicated_lot' ? (
+          <View style={styles.parkingBadgeRow}>
+            <View style={styles.dedicatedParkingBadge}>
+              <Ionicons name="car-outline" size={11} color={BrandColors.deepForestGreen} />
+              <Text style={styles.dedicatedParkingText}>Dedicated Parking</Text>
+            </View>
+          </View>
+        ) : khanaSceneData?.parkingType === 'street_crowded' ? (
+          <View style={styles.parkingBadgeRow}>
+            <View style={styles.crowdedParkingBadge}>
+              <Ionicons name="alert-circle-outline" size={11} color="#B45309" />
+              <Text style={styles.crowdedParkingText}>Crowded Street Parking</Text>
+            </View>
+          </View>
+        ) : null}
+
+        {/* Hero Dishes Preview Line */}
+        {khanaSceneData?.heroDishes && khanaSceneData.heroDishes.length > 0 ? (
+          <View style={styles.heroDishesRow}>
+            <Ionicons name="restaurant" size={12} color={BrandColors.saffronAccent} />
+            <Text style={styles.heroDishesText} numberOfLines={1}>
+              Famous for:{' '}
+              <Text style={styles.heroDishesBold}>
+                {khanaSceneData.heroDishes.slice(0, 2).join(', ')}
+                {khanaSceneData.heroDishes.length > 2 ? '...' : ''}
+              </Text>
+            </Text>
+          </View>
+        ) : null}
+
+        {/* Bank Card Discount Pill */}
+        {cardDealsSummary ? (
+          <View style={styles.cardDealPill}>
+            <Ionicons name="card" size={13} color="#B45309" />
+            <Text style={styles.cardDealText} numberOfLines={1}>
+              {cardDealsSummary}
+            </Text>
+          </View>
+        ) : null}
 
         {/* Footer Meta: Price & Attribution */}
         <View style={styles.footerRow}>
@@ -324,6 +384,85 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
     color: BrandColors.mutedGrey,
+  },
+  cardDealPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: Radii.sm,
+    marginTop: 2,
+    alignSelf: 'flex-start',
+  },
+  cardDealText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#92400E',
+  },
+  parkingBadgeRow: {
+    flexDirection: 'row',
+    marginTop: 3,
+  },
+  valetBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#DCFCE7',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: Radii.sm,
+  },
+  valetBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#15803D',
+  },
+  dedicatedParkingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: BrandColors.lightGreen,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: Radii.sm,
+  },
+  dedicatedParkingText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: BrandColors.deepForestGreen,
+  },
+  crowdedParkingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: Radii.sm,
+  },
+  crowdedParkingText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#B45309',
+  },
+  heroDishesRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 3,
+  },
+  heroDishesText: {
+    fontSize: 11,
+    color: BrandColors.mutedGrey,
+    flex: 1,
+  },
+  heroDishesBold: {
+    color: BrandColors.charcoal,
+    fontWeight: '700',
   },
   footerRow: {
     flexDirection: 'row',

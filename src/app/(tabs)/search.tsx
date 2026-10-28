@@ -83,6 +83,11 @@ export default function SearchScreen() {
   const [familyFriendlyOnly, setFamilyFriendlyOnly] = useState(
     params.filter === 'family'
   );
+  const [hasCardDealsOnly, setHasCardDealsOnly] = useState(
+    params.filter === 'card-deals'
+  );
+  const [valetOnly, setValetOnly] = useState(params.filter === 'valet');
+  const [selectedBank, setSelectedBank] = useState<string>('all');
   const [sortBy, setSortBy] = useState<SortOption>(
     params.filter === 'near-me' ? 'nearest' : 'relevance'
   );
@@ -111,6 +116,8 @@ export default function SearchScreen() {
       if (params.filter === 'bbq') setSelectedCuisine('bbq');
       if (params.filter === 'burgers') setSelectedCuisine('burgers');
       if (params.filter === 'cafes') setSelectedCuisine('cafes');
+      if (params.filter === 'card-deals') setHasCardDealsOnly(true);
+      if (params.filter === 'valet') setValetOnly(true);
       if (params.filter === 'near-me') setSortBy('nearest');
     }
   }
@@ -140,6 +147,9 @@ export default function SearchScreen() {
       budgetOnly,
       openNowOnly,
       familyFriendlyOnly,
+      valetOnly,
+      hasCardDealsOnly,
+      cardDealBank: selectedBank !== 'all' ? selectedBank : null,
       nearMeOnly: sortBy === 'nearest',
       sortBy,
     }),
@@ -153,6 +163,9 @@ export default function SearchScreen() {
       budgetOnly,
       openNowOnly,
       familyFriendlyOnly,
+      valetOnly,
+      hasCardDealsOnly,
+      selectedBank,
       sortBy,
     ]
   );
@@ -195,6 +208,9 @@ export default function SearchScreen() {
     setOpenNowOnly(false);
     setBudgetOnly(false);
     setFamilyFriendlyOnly(false);
+    setValetOnly(false);
+    setHasCardDealsOnly(false);
+    setSelectedBank('all');
     setSortBy('relevance');
     setLocationMessage(null);
   };
@@ -363,8 +379,71 @@ export default function SearchScreen() {
                 Family Friendly (Verified)
               </Text>
             </Pressable>
+
+            <Pressable
+              onPress={() => setValetOnly((v) => !v)}
+              style={[styles.chip, valetOnly && styles.chipActive]}>
+              <Ionicons
+                name="car-outline"
+                size={13}
+                color={valetOnly ? BrandColors.white : BrandColors.charcoal}
+              />
+              <Text style={[styles.chipText, valetOnly && styles.chipTextActive]}>
+                Valet Parking
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() => setHasCardDealsOnly((v) => !v)}
+              style={[styles.chip, hasCardDealsOnly && styles.chipDealActive]}>
+              <Ionicons
+                name="card-outline"
+                size={13}
+                color={hasCardDealsOnly ? BrandColors.white : '#B45309'}
+              />
+              <Text
+                style={[
+                  styles.chipText,
+                  hasCardDealsOnly && styles.chipTextActive,
+                ]}>
+                Bank Discounts
+              </Text>
+            </Pressable>
           </ScrollView>
         </View>
+
+        {/* Bank Selection Filter */}
+        {hasCardDealsOnly ? (
+          <View style={styles.filterGroup}>
+            <Text style={styles.filterGroupLabel}>Select Your Bank</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.chipRow}>
+              {[
+                { id: 'all', label: 'All Banks' },
+                { id: 'alfalah', label: 'Bank Alfalah' },
+                { id: 'meezan', label: 'Meezan Bank' },
+                { id: 'hbl', label: 'HBL' },
+                { id: 'nayapay', label: 'Nayapay' },
+                { id: 'scb', label: 'Standard Chartered' },
+                { id: 'ubl', label: 'UBL' },
+              ].map((bank) => {
+                const active = selectedBank === bank.id;
+                return (
+                  <Pressable
+                    key={bank.id}
+                    onPress={() => setSelectedBank(bank.id)}
+                    style={[styles.chip, active && styles.chipActive]}>
+                    <Text style={[styles.chipText, active && styles.chipTextActive]}>
+                      {bank.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </View>
+        ) : null}
 
         {/* Sort Options */}
         <View style={styles.filterGroup}>
@@ -541,6 +620,10 @@ const styles = StyleSheet.create({
   chipActive: {
     backgroundColor: BrandColors.primaryGreen,
     borderColor: BrandColors.primaryGreen,
+  },
+  chipDealActive: {
+    backgroundColor: '#B45309',
+    borderColor: '#B45309',
   },
   chipSortActive: {
     backgroundColor: BrandColors.deepForestGreen,

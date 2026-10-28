@@ -26,10 +26,12 @@ import { BrandColors, Radii, Spacing, Typography } from '@/theme';
 
 const QUICK_FILTERS = [
   { id: 'near-me', label: 'Near Me', icon: 'navigate-outline' as const },
+  { id: 'card-deals', label: 'Bank Discounts', icon: 'card-outline' as const },
   { id: 'open-now', label: 'Open Now', icon: 'time-outline' as const },
   { id: 'rating-4', label: 'Rating 4.0+', icon: 'star-outline' as const },
   { id: 'budget', label: 'Budget Friendly', icon: 'wallet-outline' as const },
   { id: 'family', label: 'Family Friendly', icon: 'people-outline' as const },
+  { id: 'valet', label: 'Valet Parking', icon: 'car-outline' as const },
   { id: 'pakistani', label: 'Pakistani', icon: 'restaurant-outline' as const },
   { id: 'bbq', label: 'BBQ', icon: 'flame-outline' as const },
   { id: 'burgers', label: 'Burgers', icon: 'fast-food-outline' as const },
@@ -171,6 +173,27 @@ export default function ExploreScreen() {
 
         <ComparisonTrayBar />
 
+        {/* Khana Roulette Banner CTA */}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Spin the Khana Roulette to decide where to eat"
+          onPress={() => router.push('/roulette')}
+          style={styles.rouletteBanner}>
+          <View style={styles.rouletteBannerLeft}>
+            <View style={styles.rouletteBadge}>
+              <Text style={styles.rouletteBadgeText}>GROUP SCENE DECIDER 🎲</Text>
+            </View>
+            <Text style={styles.rouletteBannerTitle}>Can&apos;t agree where to eat?</Text>
+            <Text style={styles.rouletteBannerSubtitle}>
+              Spin the Khana Roulette to pick a spot & share to WhatsApp
+            </Text>
+          </View>
+          <View style={styles.rouletteBannerRight}>
+            <Ionicons name="dice" size={28} color={BrandColors.warmCream} />
+            <Ionicons name="chevron-forward" size={18} color={BrandColors.warmCream} />
+          </View>
+        </Pressable>
+
         {/* Section 1: Explore by Cuisine */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>1. Explore by Cuisine</Text>
@@ -307,10 +330,38 @@ export default function ExploreScreen() {
               />
             )}
 
-            {/* Section 5: Budget-Friendly Restaurants */}
+            {/* Section 5: Bank Card Discounts */}
+            {data && data.cardDealsSpots && data.cardDealsSpots.length > 0 ? (
+              <>
+                <View style={styles.sectionHeader}>
+                  <View>
+                    <Text style={styles.sectionTitle}>5. Bank Card Discounts (Up to 30% Off)</Text>
+                    <Text style={styles.sectionSubtitle}>
+                      Verified dining discounts on Meezan, Alfalah, HBL, Nayapay & SCB cards
+                    </Text>
+                  </View>
+                  <Pressable
+                    onPress={() =>
+                      router.push({
+                        pathname: '/(tabs)/search',
+                        params: { filter: 'card-deals' },
+                      })
+                    }>
+                    <Text style={styles.sectionLink}>View all</Text>
+                  </Pressable>
+                </View>
+                <View style={styles.cardList}>
+                  {data.cardDealsSpots.map((item) => (
+                    <RestaurantCard key={`deal-${item.placeId}`} item={item} />
+                  ))}
+                </View>
+              </>
+            ) : null}
+
+            {/* Section 6: Budget-Friendly Restaurants */}
             <View style={styles.sectionHeader}>
               <View>
-                <Text style={styles.sectionTitle}>5. Budget-Friendly Restaurants</Text>
+                <Text style={styles.sectionTitle}>6. Budget-Friendly Restaurants</Text>
                 <Text style={styles.sectionSubtitle}>
                   Places with verified budget PKR pricing or Google Inexpensive level
                 </Text>
@@ -484,6 +535,53 @@ const styles = StyleSheet.create({
   },
   cardList: {
     gap: Spacing.md,
+  },
+  rouletteBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: BrandColors.deepForestGreen,
+    padding: Spacing.md,
+    borderRadius: Radii.lg,
+    marginVertical: Spacing.xs,
+    shadowColor: BrandColors.deepForestGreen,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  rouletteBannerLeft: {
+    flex: 1,
+    gap: 3,
+    paddingRight: Spacing.sm,
+  },
+  rouletteBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: BrandColors.primaryGreen,
+    paddingVertical: 2,
+    paddingHorizontal: Spacing.xs,
+    borderRadius: Radii.sm,
+  },
+  rouletteBadgeText: {
+    color: BrandColors.warmCream,
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  rouletteBannerTitle: {
+    color: BrandColors.warmCream,
+    fontSize: Typography.sizes.md,
+    fontWeight: '700',
+  },
+  rouletteBannerSubtitle: {
+    color: BrandColors.warmCream,
+    fontSize: Typography.sizes.xs,
+    opacity: 0.85,
+  },
+  rouletteBannerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   popularWrap: {
     flexDirection: 'row',

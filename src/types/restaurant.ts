@@ -68,6 +68,7 @@ export interface KhanaSceneMenuItem {
   currencyCode: 'PKR';
   category: string;
   isAvailable: boolean;
+  isSignature?: boolean;
   lastVerifiedAt: string;
 }
 
@@ -91,6 +92,42 @@ export interface KhanaSceneUserReview {
   reviewText: string;
   visitDate?: string;
   createdAt: string;
+}
+
+export type ParkingType =
+  | 'valet'
+  | 'dedicated_lot'
+  | 'street_moderate'
+  | 'street_crowded'
+  | 'unknown';
+
+export type BankCode =
+  | 'all'
+  | 'alfalah'
+  | 'meezan'
+  | 'hbl'
+  | 'scb'
+  | 'nayapay'
+  | 'ubl'
+  | 'mcb'
+  | 'faysal';
+
+export interface BankCardDeal {
+  id: string;
+  restaurantRecordId?: string;
+  googlePlaceId: string;
+  bankName: string;
+  bankCode: BankCode | string;
+  cardTier: string;
+  discountPercentage: number;
+  applicableDays: string[];
+  maxDiscountPkr?: number;
+  minSpendPkr?: number;
+  terms?: string;
+  isActive: boolean;
+  validFrom?: string;
+  validUntil?: string;
+  verifiedAt: string;
 }
 
 /**
@@ -153,6 +190,10 @@ export interface KhanaSceneRecord {
   khanaSceneReviewCount?: number;
   menus?: KhanaSceneMenu[];
   khanaSceneReviews?: KhanaSceneUserReview[];
+  cardDeals?: BankCardDeal[];
+  parkingType?: ParkingType;
+  hasValet?: boolean;
+  heroDishes?: string[];
 }
 
 /**
@@ -183,5 +224,8 @@ export interface SearchFilters {
   openNowOnly: boolean;
   familyFriendlyOnly: boolean;
   nearMeOnly: boolean;
+  valetOnly?: boolean;
+  hasCardDealsOnly?: boolean;
+  cardDealBank?: string | null;
   sortBy: SortOption;
 }

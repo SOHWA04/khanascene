@@ -15,10 +15,24 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_DATA_MODE": "live",
+        "EXPO_PUBLIC_DEFAULT_CITY": "islamabad",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://iqeijeblasptjnhuevqf.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxZWlqZWJsYXNwdGpuaHVldnFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMwOTIzMDYsImV4cCI6MjEwODY2ODMwNn0.N_5BValiB-GgsBPExuRByYOhV-zRUHMDU1U5_VeCDfY",
+        "EXPO_PUBLIC_GOOGLE_PLACES_PROXY_URL": "https://iqeijeblasptjnhuevqf.supabase.co/functions/v1/places-proxy"
       }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_DATA_MODE": "live",
+        "EXPO_PUBLIC_DEFAULT_CITY": "islamabad",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://iqeijeblasptjnhuevqf.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlxZWlqZWJsYXNwdGpuaHVldnFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMwOTIzMDYsImV4cCI6MjEwODY2ODMwNn0.N_5BValiB-GgsBPExuRByYOhV-zRUHMDU1U5_VeCDfY",
+        "EXPO_PUBLIC_GOOGLE_PLACES_PROXY_URL": "https://iqeijeblasptjnhuevqf.supabase.co/functions/v1/places-proxy"
+      }
     }
   },
   "submit": {

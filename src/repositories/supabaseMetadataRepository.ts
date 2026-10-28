@@ -21,6 +21,9 @@ interface SupabaseRestaurantRow {
   is_khanascene_pick: boolean;
   pick_reason: string | null;
   is_family_friendly: boolean | null;
+  parking_type: string | null;
+  has_valet: boolean | null;
+  hero_dishes: string[] | null;
   khanascene_rating_avg: number | null;
   khanascene_review_count: number | null;
   areas?: {
@@ -28,6 +31,22 @@ interface SupabaseRestaurantRow {
   } | null;
   restaurant_record_cuisines?: {
     cuisines?: { slug: string } | null;
+  }[];
+  restaurant_card_deals?: {
+    id: string;
+    google_place_id: string;
+    bank_name: string;
+    bank_code: string;
+    card_tier: string;
+    discount_percentage: number;
+    applicable_days: string[];
+    max_discount_pkr: number | null;
+    min_spend_pkr: number | null;
+    terms: string | null;
+    is_active: boolean;
+    valid_from: string | null;
+    valid_until: string | null;
+    verified_at: string;
   }[];
   restaurant_menus?: {
     id: string;
@@ -43,6 +62,7 @@ interface SupabaseRestaurantRow {
       currency_code: 'PKR';
       category: string;
       is_available: boolean;
+      is_signature?: boolean;
       last_verified_at: string;
     }[];
   }[];
@@ -80,11 +100,30 @@ export class SupabaseMetadataRepository {
         is_khanascene_pick,
         pick_reason,
         is_family_friendly,
+        parking_type,
+        has_valet,
+        hero_dishes,
         khanascene_rating_avg,
         khanascene_review_count,
         areas ( name ),
         restaurant_record_cuisines (
           cuisines ( slug )
+        ),
+        restaurant_card_deals (
+          id,
+          google_place_id,
+          bank_name,
+          bank_code,
+          card_tier,
+          discount_percentage,
+          applicable_days,
+          max_discount_pkr,
+          min_spend_pkr,
+          terms,
+          is_active,
+          valid_from,
+          valid_until,
+          verified_at
         ),
         restaurant_menus (
           id,
@@ -100,6 +139,7 @@ export class SupabaseMetadataRepository {
             currency_code,
             category,
             is_available,
+            is_signature,
             last_verified_at
           )
         )
@@ -137,6 +177,9 @@ export class SupabaseMetadataRepository {
       isKhanaScenePick: row.is_khanascene_pick,
       pickReason: row.pick_reason ?? undefined,
       isFamilyFriendly: row.is_family_friendly ?? undefined,
+      parkingType: (row.parking_type as any) ?? 'unknown',
+      hasValet: Boolean(row.has_valet),
+      heroDishes: row.hero_dishes ?? [],
       hasVerifiedMenu: (row.restaurant_menus?.length ?? 0) > 0,
       khanaSceneRatingAvg:
         row.khanascene_rating_avg != null ? Number(row.khanascene_rating_avg) : undefined,
@@ -157,9 +200,29 @@ export class SupabaseMetadataRepository {
               currencyCode: 'PKR' as const,
               category: item.category,
               isAvailable: item.is_available,
+              isSignature: Boolean(item.is_signature),
               lastVerifiedAt: item.last_verified_at,
             })) ?? [],
         })) ?? [],
+      cardDeals:
+        row.restaurant_card_deals
+          ?.filter((d) => d.is_active)
+          .map((deal) => ({
+            id: deal.id,
+            googlePlaceId: deal.google_place_id,
+            bankName: deal.bank_name,
+            bankCode: deal.bank_code,
+            cardTier: deal.card_tier,
+            discountPercentage: deal.discount_percentage,
+            applicableDays: deal.applicable_days ?? [],
+            maxDiscountPkr: deal.max_discount_pkr ?? undefined,
+            minSpendPkr: deal.min_spend_pkr ?? undefined,
+            terms: deal.terms ?? undefined,
+            isActive: deal.is_active,
+            validFrom: deal.valid_from ?? undefined,
+            validUntil: deal.valid_until ?? undefined,
+            verifiedAt: deal.verified_at,
+          })) ?? [],
     }));
   }
 }

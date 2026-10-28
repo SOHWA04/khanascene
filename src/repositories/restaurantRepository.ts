@@ -202,6 +202,29 @@ export function filterAndSortRestaurants(
       }
     }
 
+    if (filters.valetOnly) {
+      if (item.khanaSceneData?.hasValet !== true) {
+        return false;
+      }
+    }
+
+    if (filters.hasCardDealsOnly) {
+      const deals = item.khanaSceneData?.cardDeals;
+      if (!deals || deals.length === 0) {
+        return false;
+      }
+    }
+
+    if (filters.cardDealBank && filters.cardDealBank !== 'all') {
+      const deals = item.khanaSceneData?.cardDeals ?? [];
+      const hasBankMatch = deals.some(
+        (deal) => deal.bankCode.toLowerCase() === filters.cardDealBank?.toLowerCase()
+      );
+      if (!hasBankMatch) {
+        return false;
+      }
+    }
+
     if (normalizedQuery.length > 0) {
       const searchableChunks = [
         item.googleData.name,
@@ -209,6 +232,7 @@ export function filterAndSortRestaurants(
         item.googleData.neighbourhood,
         item.googleData.formattedAddress,
         ...(item.khanaSceneData?.cuisines ?? []),
+        ...(item.khanaSceneData?.heroDishes ?? []),
         ...(item.khanaSceneData?.menus?.flatMap((m) => m.items.map((i) => i.name)) ?? []),
       ]
         .filter(Boolean)
@@ -323,6 +347,7 @@ class RestaurantRepository {
     khanaScenePicks: RestaurantDiscoveryItem[];
     nearbyOrCityPlaces: RestaurantDiscoveryItem[];
     budgetFriendly: RestaurantDiscoveryItem[];
+    cardDealsSpots: RestaurantDiscoveryItem[];
     isMockMode: boolean;
   }> {
     const allForCity = await this.getBaseDatasetForCity(cityId);
@@ -334,6 +359,9 @@ class RestaurantRepository {
         (i) =>
           i.googleData.priceLevel === 'PRICE_LEVEL_INEXPENSIVE' ||
           (i.khanaSceneData?.priceMaxPkr != null && i.khanaSceneData.priceMaxPkr <= 1500)
+      ),
+      cardDealsSpots: allForCity.filter(
+        (i) => (i.khanaSceneData?.cardDeals?.length ?? 0) > 0
       ),
       isMockMode: APP_CONFIG.dataMode === 'mock',
     };

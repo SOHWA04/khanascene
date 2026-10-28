@@ -3,12 +3,14 @@
     "name": "KhanaScene",
     "slug": "khanascene",
     "version": "1.0.0",
+    "description": "Pakistan's restaurant discovery guide. Find verified menus, bank card discounts, parking reality, and calculate your bill before ordering in Islamabad & Rawalpindi.",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "khanascene",
     "userInterfaceStyle": "light",
     "ios": {
       "bundleIdentifier": "pk.khanascene.app",
+      "buildNumber": "1",
       "supportsTablet": true,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "KhanaScene uses your location when you choose 'Near Me' to show nearby restaurants in Islamabad and Rawalpindi."
@@ -16,6 +18,7 @@
     },
     "android": {
       "package": "pk.khanascene.app",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#173D32",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -47,7 +50,8 @@
         {
           "locationWhenInUsePermission": "KhanaScene uses your location when you choose 'Near Me' to show nearby restaurants in Islamabad and Rawalpindi."
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,
