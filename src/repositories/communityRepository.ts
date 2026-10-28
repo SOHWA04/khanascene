@@ -28,6 +28,61 @@ export interface SubmitRestaurantProposalInput {
   notes?: string;
 }
 
+export interface SubmitMenuUpdateInput {
+  googlePlaceId: string;
+  restaurantRecordId?: string;
+  dishName: string;
+  suggestedPricePkr?: number;
+  notes?: string;
+  photoUrl?: string;
+}
+
+export interface SubmitOwnerClaimInput {
+  googlePlaceId: string;
+  restaurantRecordId?: string;
+  restaurantName: string;
+  claimantName: string;
+  claimantPhone: string;
+  claimantEmail?: string;
+  claimantRole: string;
+  verificationNotes?: string;
+}
+
+export function validateMenuUpdateInput(input: SubmitMenuUpdateInput): string | null {
+  if (!input.googlePlaceId?.trim()) {
+    return 'Restaurant reference is required.';
+  }
+  const dishLen = input.dishName?.trim().length ?? 0;
+  if (dishLen < 2 || dishLen > 200) {
+    return 'Dish or item name must be between 2 and 200 characters.';
+  }
+  if (input.suggestedPricePkr !== undefined) {
+    if (isNaN(input.suggestedPricePkr) || input.suggestedPricePkr < 0) {
+      return 'Price must be a valid positive number in PKR.';
+    }
+  }
+  return null;
+}
+
+export function validateOwnerClaimInput(input: SubmitOwnerClaimInput): string | null {
+  if (!input.googlePlaceId?.trim() || !input.restaurantName?.trim()) {
+    return 'Restaurant reference and name are required.';
+  }
+  const nameLen = input.claimantName?.trim().length ?? 0;
+  if (nameLen < 2 || nameLen > 150) {
+    return 'Your name must be between 2 and 150 characters.';
+  }
+  const phone = input.claimantPhone?.trim() ?? '';
+  if (phone.length < 7 || phone.length > 30) {
+    return 'Please provide a valid contact or WhatsApp phone number.';
+  }
+  const roleLen = input.claimantRole?.trim().length ?? 0;
+  if (roleLen < 2 || roleLen > 50) {
+    return 'Please specify your role at the restaurant (e.g. Owner, General Manager, Marketing).';
+  }
+  return null;
+}
+
 export function validateReviewSubmission(input: SubmitReviewInput): string | null {
   if (!input.googlePlaceId.trim()) {
     return 'Restaurant reference is required.';
@@ -223,6 +278,90 @@ class CommunityRepository {
       ok: true,
       message:
         'Thank you! Your restaurant submission has been received and will be reviewed before being added to verified KhanaScene listings.',
+    };
+  }
+
+  /**
+   * Submits a price change or menu update suggestion from a diner.
+   */
+  async submitMenuUpdate(
+    input: SubmitMenuUpdateInput
+  ): Promise<{ ok: boolean; message: string }> {
+    const error = validateMenuUpdateInput(input);
+    if (error) {
+      return { ok: false, message: error };
+    }
+
+    const user = useAuthStore.getState().user;
+    const client = getSupabaseClient();
+    if (!client) {
+      return {
+        ok: true,
+        message: 'Thank you! Your price update suggestion has been received for editorial verification.',
+      };
+    }
+
+    const { error: dbError } = await client.from('menu_update_suggestions').insert({
+      submitted_by_user_id: user?.id ?? null,
+      restaurant_record_id: input.restaurantRecordId ?? null,
+      google_place_id: input.googlePlaceId,
+      dish_name: input.dishName.trim(),
+      suggested_price_pkr: input.suggestedPricePkr ? Math.round(input.suggestedPricePkr) : null,
+      notes: input.notes?.trim() || null,
+      photo_url: input.photoUrl?.trim() || null,
+      status: 'pending',
+    });
+
+    if (dbError) {
+      return { ok: false, message: dbError.message };
+    }
+
+    return {
+      ok: true,
+      message: 'Thank you! Your price suggestion has been received and our team will verify the menu update.',
+    };
+  }
+
+  /**
+   * Submits a restaurant owner claim and B2B partnership inquiry.
+   */
+  async submitOwnerClaim(
+    input: SubmitOwnerClaimInput
+  ): Promise<{ ok: boolean; message: string }> {
+    const error = validateOwnerClaimInput(input);
+    if (error) {
+      return { ok: false, message: error };
+    }
+
+    const user = useAuthStore.getState().user;
+    const client = getSupabaseClient();
+    if (!client) {
+      return {
+        ok: true,
+        message: 'Thank you! Your claim request has been received. Our partnership team will contact you shortly.',
+      };
+    }
+
+    const { error: dbError } = await client.from('restaurant_claims').insert({
+      claimed_by_user_id: user?.id ?? null,
+      restaurant_record_id: input.restaurantRecordId ?? null,
+      google_place_id: input.googlePlaceId,
+      restaurant_name: input.restaurantName.trim(),
+      claimant_name: input.claimantName.trim(),
+      claimant_phone: input.claimantPhone.trim(),
+      claimant_email: input.claimantEmail?.trim() || null,
+      claimant_role: input.claimantRole.trim(),
+      verification_notes: input.verificationNotes?.trim() || null,
+      status: 'pending',
+    });
+
+    if (dbError) {
+      return { ok: false, message: dbError.message };
+    }
+
+    return {
+      ok: true,
+      message: 'Claim submitted successfully! Our KhanaScene team will reach out via WhatsApp/Phone to verify your role and provide your menu dashboard.',
     };
   }
 }

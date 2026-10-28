@@ -44,7 +44,7 @@ describe('Phase 2 — Search, Filter & Sort Repository Logic', () => {
       cityId: 'rawalpindi',
     });
 
-    expect(isbResults.length).toBe(4);
+    expect(isbResults.length).toBe(5);
     expect(rwpResults.length).toBe(2);
     expect(isbResults.every((i) => i.googleData.cityId === 'islamabad')).toBe(true);
     expect(rwpResults.every((i) => i.googleData.cityId === 'rawalpindi')).toBe(true);

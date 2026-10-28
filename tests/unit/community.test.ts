@@ -1,5 +1,7 @@
 import {
   communityRepository,
+  validateMenuUpdateInput,
+  validateOwnerClaimInput,
   validateRestaurantProposal,
   validateReviewSubmission,
 } from '@/repositories/communityRepository';
@@ -88,5 +90,82 @@ describe('Phase 6 & 7 — Community Reviews, Reporting & Restaurant Proposals', 
         proposedCityId: 'islamabad',
       })
     ).toBeNull();
+  });
+
+  it('validates menu update suggestions from diners', async () => {
+    expect(
+      validateMenuUpdateInput({
+        googlePlaceId: 'dev-place-isb-monal-ridge',
+        dishName: '',
+      })
+    ).toContain('between 2 and 200 characters');
+
+    expect(
+      validateMenuUpdateInput({
+        googlePlaceId: 'dev-place-isb-monal-ridge',
+        dishName: 'Special Mutton Karahi',
+        suggestedPricePkr: -100,
+      })
+    ).toContain('positive number');
+
+    expect(
+      validateMenuUpdateInput({
+        googlePlaceId: 'dev-place-isb-monal-ridge',
+        dishName: 'Special Mutton Karahi',
+        suggestedPricePkr: 2650,
+      })
+    ).toBeNull();
+
+    const result = await communityRepository.submitMenuUpdate({
+      googlePlaceId: 'dev-place-isb-monal-ridge',
+      dishName: 'Special Mutton Karahi',
+      suggestedPricePkr: 2650,
+      notes: 'Price increased on recent dine-in bill',
+    });
+    expect(result.ok).toBe(true);
+    expect(result.message).toContain('price update suggestion has been received');
+  });
+
+  it('validates restaurant owner claim submissions and contact information', async () => {
+    expect(
+      validateOwnerClaimInput({
+        googlePlaceId: 'dev-place-isb-monal-ridge',
+        restaurantName: 'Kabul Restaurant',
+        claimantName: 'A',
+        claimantPhone: '0300-1234567',
+        claimantRole: 'Owner',
+      })
+    ).toContain('between 2 and 150 characters');
+
+    expect(
+      validateOwnerClaimInput({
+        googlePlaceId: 'dev-place-isb-monal-ridge',
+        restaurantName: 'Kabul Restaurant',
+        claimantName: 'Asim Chaudhry',
+        claimantPhone: '123',
+        claimantRole: 'Owner',
+      })
+    ).toContain('contact or WhatsApp phone number');
+
+    expect(
+      validateOwnerClaimInput({
+        googlePlaceId: 'dev-place-isb-monal-ridge',
+        restaurantName: 'Kabul Restaurant',
+        claimantName: 'Asim Chaudhry',
+        claimantPhone: '0300-1234567',
+        claimantRole: 'General Manager',
+        verificationNotes: 'Want to update official menu and add weekend brunch specials',
+      })
+    ).toBeNull();
+
+    const claimResult = await communityRepository.submitOwnerClaim({
+      googlePlaceId: 'dev-place-isb-monal-ridge',
+      restaurantName: 'Kabul Restaurant',
+      claimantName: 'Asim Chaudhry',
+      claimantPhone: '0300-1234567',
+      claimantRole: 'General Manager',
+    });
+    expect(claimResult.ok).toBe(true);
+    expect(claimResult.message).toContain('claim request has been received');
   });
 });

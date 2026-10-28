@@ -117,21 +117,34 @@ export function RestaurantCard({ item, distanceKm }: RestaurantCardProps) {
 
         {/* Distinct Rating Badges */}
         <View style={styles.ratingsRow}>
-          <View style={styles.googleRatingBox}>
-            <Ionicons name="star" size={14} color={BrandColors.saffronAccent} />
-            {googleData.googleRating != null ? (
+          {googleData.googleRating != null ? (
+            <View style={styles.googleRatingBox}>
+              <Ionicons name="star" size={14} color={BrandColors.saffronAccent} />
               <Text style={styles.ratingValue}>
                 {googleData.googleRating.toFixed(1)}{' '}
                 <Text style={styles.ratingCount}>
                   ({googleData.googleReviewCount?.toLocaleString('en-PK') ?? 0} Google reviews)
                 </Text>
               </Text>
-            ) : (
+            </View>
+          ) : khanaSceneData?.khanaSceneRatingAvg != null ? (
+            <View style={styles.googleRatingBox}>
+              <Ionicons name="ribbon" size={14} color={BrandColors.primaryGreen} />
+              <Text style={styles.ratingValue}>
+                {khanaSceneData.khanaSceneRatingAvg.toFixed(1)}{' '}
+                <Text style={styles.ratingCount}>
+                  ({khanaSceneData.khanaSceneReviewCount ?? 0} KhanaScene reviews)
+                </Text>
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.googleRatingBox}>
+              <Ionicons name="star-outline" size={14} color={BrandColors.mutedGrey} />
               <Text style={styles.ratingCount}>Google rating unavailable</Text>
-            )}
-          </View>
+            </View>
+          )}
 
-          { googleData.openNow != null ? (
+          {googleData.openNow != null ? (
             <View
               style={[
                 styles.statusPill,
@@ -155,7 +168,9 @@ export function RestaurantCard({ item, distanceKm }: RestaurantCardProps) {
         {/* Footer Meta: Price & Attribution */}
         <View style={styles.footerRow}>
           <Text style={styles.priceText}>{priceDisplay}</Text>
-          <Text style={styles.attributionLabel}>Source: Google Maps</Text>
+          <Text style={styles.attributionLabel}>
+            Source: {googleData.googleRating != null ? 'Google Maps' : 'KhanaScene Verified'}
+          </Text>
         </View>
       </View>
     </Pressable>

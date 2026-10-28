@@ -32,6 +32,21 @@ export function calculateHaversineDistanceKm(
   return Math.round(R * c * 10) / 10;
 }
 
+export function determineOpenNowFromHours(hoursText?: string[]): boolean | null {
+  if (!hoursText || hoursText.length === 0) return null;
+  const now = new Date();
+  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  // Pakistan Standard Time is UTC+5
+  const pktDate = new Date(utc + 3600000 * 5);
+  const currentHour = pktDate.getHours() + pktDate.getMinutes() / 60;
+
+  const combined = hoursText.join(' ').toLowerCase();
+  if (combined.includes('8:00 am') || combined.includes('8:30 am')) {
+    return currentHour >= 8.5 && currentHour <= 23.5;
+  }
+  return currentHour >= 12.0 && currentHour <= 23.75;
+}
+
 /**
  * Converts a KhanaScene-owned Supabase record into a `RestaurantDiscoveryItem`
  * so Layer 1 (Supabase-First $0 discovery) works even without calling Google Places.
@@ -45,6 +60,8 @@ export function mapKhanaSceneRecordToDiscoveryItem(
     record.latitude != null && record.longitude != null
       ? { latitude: record.latitude, longitude: record.longitude }
       : undefined;
+
+  const calculatedOpenNow = determineOpenNowFromHours(record.openingHoursText);
 
   return {
     placeId,
@@ -60,6 +77,7 @@ export function mapKhanaSceneRecordToDiscoveryItem(
       primaryCategory:
         record.primaryCategory ?? (record.cuisines.join(', ') || 'Restaurant'),
       regularOpeningHoursText: record.openingHoursText,
+      openNow: calculatedOpenNow,
       nationalPhoneNumber: record.phoneNumber,
       websiteUri: record.officialWebsite,
       location,
@@ -148,13 +166,17 @@ export function filterAndSortRestaurants(
     }
 
     if (filters.minRating != null) {
-      if ((item.googleData.googleRating ?? 0) < filters.minRating) {
+      const effectiveRating =
+        item.googleData.googleRating ?? item.khanaSceneData?.khanaSceneRatingAvg ?? 0;
+      if (effectiveRating < filters.minRating) {
         return false;
       }
     }
 
     if (filters.minReviewCount != null) {
-      if ((item.googleData.googleReviewCount ?? 0) < filters.minReviewCount) {
+      const effectiveCount =
+        item.googleData.googleReviewCount ?? item.khanaSceneData?.khanaSceneReviewCount ?? 0;
+      if (effectiveCount < filters.minReviewCount) {
         return false;
       }
     }
@@ -235,12 +257,15 @@ export function sortRestaurants(
   switch (sortBy) {
     case 'highest_rating':
       return copy.sort(
-        (a, b) => (b.googleData.googleRating ?? -1) - (a.googleData.googleRating ?? -1)
+        (a, b) =>
+          (b.googleData.googleRating ?? b.khanaSceneData?.khanaSceneRatingAvg ?? -1) -
+          (a.googleData.googleRating ?? a.khanaSceneData?.khanaSceneRatingAvg ?? -1)
       );
     case 'most_reviewed':
       return copy.sort(
         (a, b) =>
-          (b.googleData.googleReviewCount ?? -1) - (a.googleData.googleReviewCount ?? -1)
+          (b.googleData.googleReviewCount ?? b.khanaSceneData?.khanaSceneReviewCount ?? -1) -
+          (a.googleData.googleReviewCount ?? a.khanaSceneData?.khanaSceneReviewCount ?? -1)
       );
     case 'lowest_price':
       return copy.sort((a, b) => {
@@ -384,8 +409,25 @@ class RestaurantRepository {
 
   async getRestaurantByPlaceId(placeId: string): Promise<RestaurantDiscoveryItem | null> {
     if (APP_CONFIG.dataMode === 'mock') {
-      const found = DEV_RESTAURANT_FIXTURES.find((item) => item.placeId === placeId);
-      return found ?? null;
+      const found = DEV_RESTAURANT_FIXTURES.find(
+        (item) =>
+          item.placeId === placeId ||
+          item.khanaSceneData?.googlePlaceId === placeId ||
+          (placeId === 'dev-place-isb-butt-karahi-f8' &&
+            item.placeId === 'dev-place-isb-chattah-karahi') ||
+          (placeId === 'dev-place-rwp-savour-saddar' &&
+            item.placeId === 'dev-place-rwp-savour-foods') ||
+          (placeId === 'dev-place-rwp-habibi-bahria' &&
+            item.placeId === 'dev-place-rwp-bahria-grill')
+      );
+      if (found) {
+        return {
+          ...found,
+          placeId,
+          googleData: { ...found.googleData, placeId },
+        };
+      }
+      return null;
     }
 
     // Check Supabase records first ($0 cost)

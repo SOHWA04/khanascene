@@ -47,6 +47,23 @@ export default function RestaurantDetailScreen() {
   const [reviewFeedback, setReviewFeedback] = useState<string | null>(null);
   const [reportFeedback, setReportFeedback] = useState<string | null>(null);
 
+  // Menu update suggestion state
+  const [showMenuUpdateForm, setShowMenuUpdateForm] = useState(false);
+  const [updateDishName, setUpdateDishName] = useState('');
+  const [updatePricePkr, setUpdatePricePkr] = useState('');
+  const [updateNotes, setUpdateNotes] = useState('');
+  const [menuUpdateFeedback, setMenuUpdateFeedback] = useState<string | null>(null);
+  const [isSubmittingMenuUpdate, setIsSubmittingMenuUpdate] = useState(false);
+
+  // Restaurant owner claim state
+  const [showClaimForm, setShowClaimForm] = useState(false);
+  const [claimantName, setClaimantName] = useState('');
+  const [claimantPhone, setClaimantPhone] = useState('');
+  const [claimantRole, setClaimantRole] = useState('');
+  const [claimNotes, setClaimNotes] = useState('');
+  const [claimFeedback, setClaimFeedback] = useState<string | null>(null);
+  const [isSubmittingClaim, setIsSubmittingClaim] = useState(false);
+
   const { data: item, isLoading, isError, refetch } = useQuery({
     queryKey: ['restaurant-detail', resolvedPlaceId],
     queryFn: () => restaurantRepository.getRestaurantByPlaceId(resolvedPlaceId),
@@ -355,11 +372,19 @@ export default function RestaurantDetailScreen() {
         )}
       </View>
 
-      {/* Section 3: Menu and Prices (Only displayed when verified data exists) */}
-      {khanaSceneData?.menus && khanaSceneData.menus.length > 0 ? (
-        <View style={styles.sectionCard}>
+      {/* Section 3: Menu & Verified Prices */}
+      <View style={styles.sectionCard}>
+        <View style={styles.sectionHeaderRow}>
           <Text style={styles.sectionTitle}>3. Menu & Verified Prices (PKR)</Text>
-          {khanaSceneData.menus.map((menu) => (
+          <Pressable onPress={() => setShowMenuUpdateForm((v) => !v)}>
+            <Text style={styles.externalLinkText}>
+              {showMenuUpdateForm ? 'Cancel' : 'Suggest Price Update'}
+            </Text>
+          </Pressable>
+        </View>
+
+        {khanaSceneData?.menus && khanaSceneData.menus.length > 0 ? (
+          khanaSceneData.menus.map((menu) => (
             <View key={menu.id} style={styles.menuBlock}>
               <Text style={styles.menuSubtitle}>
                 {menu.name} • Verified: {menu.lastVerifiedAt}
@@ -378,9 +403,178 @@ export default function RestaurantDetailScreen() {
                 </View>
               ))}
             </View>
-          ))}
+          ))
+        ) : (
+          <Text style={styles.emptyNotice}>
+            No verified dine-in menu items on file yet for this restaurant. Have you visited recently?
+            You can suggest updated dish prices below.
+          </Text>
+        )}
+
+        {/* Suggest Menu Update Form */}
+        {showMenuUpdateForm ? (
+          <View style={styles.reviewFormBox}>
+            <Text style={styles.authorName}>Suggest Price / Menu Correction</Text>
+            <Text style={styles.policyNotice}>
+              Help fellow diners by reporting recent price changes or new dishes from your visit.
+            </Text>
+            <TextInput
+              value={updateDishName}
+              onChangeText={setUpdateDishName}
+              placeholder="Dish or Item Name (e.g. Chicken Karahi, Hi-Tea Buffet)"
+              placeholderTextColor={BrandColors.mutedGrey}
+              style={styles.formInput}
+            />
+            <TextInput
+              value={updatePricePkr}
+              onChangeText={setUpdatePricePkr}
+              placeholder="New Price in PKR (e.g. 2150)"
+              placeholderTextColor={BrandColors.mutedGrey}
+              keyboardType="numeric"
+              style={styles.formInput}
+            />
+            <TextInput
+              value={updateNotes}
+              onChangeText={setUpdateNotes}
+              placeholder="Notes or details (e.g. Price increased on the latest bill, includes salad)"
+              placeholderTextColor={BrandColors.mutedGrey}
+              multiline
+              style={styles.formTextArea}
+            />
+            <View style={styles.formActionsRow}>
+              <Pressable
+                disabled={isSubmittingMenuUpdate}
+                onPress={async () => {
+                  setIsSubmittingMenuUpdate(true);
+                  const res = await communityRepository.submitMenuUpdate({
+                    googlePlaceId: item.placeId,
+                    restaurantRecordId: khanaSceneData?.id,
+                    dishName: updateDishName,
+                    suggestedPricePkr: updatePricePkr ? parseInt(updatePricePkr, 10) : undefined,
+                    notes: updateNotes,
+                  });
+                  setIsSubmittingMenuUpdate(false);
+                  setMenuUpdateFeedback(res.message);
+                  if (res.ok) {
+                    setUpdateDishName('');
+                    setUpdatePricePkr('');
+                    setUpdateNotes('');
+                    setShowMenuUpdateForm(false);
+                  }
+                }}
+                style={styles.formSubmitBtn}>
+                <Text style={styles.formSubmitText}>
+                  {isSubmittingMenuUpdate ? 'Submitting...' : 'Submit Price Update'}
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={() => setShowMenuUpdateForm(false)}
+                style={styles.formCancelBtn}>
+                <Text style={styles.formCancelText}>Cancel</Text>
+              </Pressable>
+            </View>
+          </View>
+        ) : null}
+
+        {menuUpdateFeedback ? (
+          <Text style={styles.successBanner}>{menuUpdateFeedback}</Text>
+        ) : null}
+
+        {/* Claim Restaurant / Owner Callout */}
+        <View style={styles.claimCard}>
+          <View style={styles.sectionHeaderRow}>
+            <View style={{ flex: 1, paddingRight: Spacing.xs }}>
+              <Text style={styles.claimCardTitle}>Are you the manager or owner?</Text>
+              <Text style={styles.claimCardText}>
+                Claim this restaurant on KhanaScene to update your official menu, post deals, and get a Verified Partner badge.
+              </Text>
+            </View>
+            <Pressable
+              onPress={() => setShowClaimForm((v) => !v)}
+              style={styles.menuActionBtn}>
+              <Ionicons name="shield-checkmark" size={14} color={BrandColors.deepForestGreen} />
+              <Text style={styles.menuActionText}>
+                {showClaimForm ? 'Close' : 'Claim Spot'}
+              </Text>
+            </Pressable>
+          </View>
+
+          {showClaimForm ? (
+            <View style={styles.reviewFormBox}>
+              <Text style={styles.authorName}>Claim & Verify Restaurant Ownership</Text>
+              <TextInput
+                value={claimantName}
+                onChangeText={setClaimantName}
+                placeholder="Your Full Name (e.g. Asim Chaudhry)"
+                placeholderTextColor={BrandColors.mutedGrey}
+                style={styles.formInput}
+              />
+              <TextInput
+                value={claimantPhone}
+                onChangeText={setClaimantPhone}
+                placeholder="Mobile / WhatsApp Number (e.g. 0300-1234567)"
+                placeholderTextColor={BrandColors.mutedGrey}
+                keyboardType="phone-pad"
+                style={styles.formInput}
+              />
+              <TextInput
+                value={claimantRole}
+                onChangeText={setClaimantRole}
+                placeholder="Role (e.g. Owner, General Manager, Marketing Lead)"
+                placeholderTextColor={BrandColors.mutedGrey}
+                style={styles.formInput}
+              />
+              <TextInput
+                value={claimNotes}
+                onChangeText={setClaimNotes}
+                placeholder="Notes or business details (optional)"
+                placeholderTextColor={BrandColors.mutedGrey}
+                multiline
+                style={styles.formTextArea}
+              />
+              <View style={styles.formActionsRow}>
+                <Pressable
+                  disabled={isSubmittingClaim}
+                  onPress={async () => {
+                    setIsSubmittingClaim(true);
+                    const res = await communityRepository.submitOwnerClaim({
+                      googlePlaceId: item.placeId,
+                      restaurantRecordId: khanaSceneData?.id,
+                      restaurantName: googleData.name,
+                      claimantName,
+                      claimantPhone,
+                      claimantRole,
+                      verificationNotes: claimNotes,
+                    });
+                    setIsSubmittingClaim(false);
+                    setClaimFeedback(res.message);
+                    if (res.ok) {
+                      setClaimantName('');
+                      setClaimantPhone('');
+                      setClaimantRole('');
+                      setClaimNotes('');
+                      setShowClaimForm(false);
+                    }
+                  }}
+                  style={styles.formSubmitBtn}>
+                  <Text style={styles.formSubmitText}>
+                    {isSubmittingClaim ? 'Submitting...' : 'Submit Claim Request'}
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => setShowClaimForm(false)}
+                  style={styles.formCancelBtn}>
+                  <Text style={styles.formCancelText}>Cancel</Text>
+                </Pressable>
+              </View>
+            </View>
+          ) : null}
+
+          {claimFeedback ? (
+            <Text style={styles.successBanner}>{claimFeedback}</Text>
+          ) : null}
         </View>
-      ) : null}
+      </View>
 
       {/* Section 5: Location and Hours (Only displayed when hours or location exist) */}
       {googleData.regularOpeningHoursText || googleData.location ? (
@@ -830,5 +1024,99 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.sm,
     color: BrandColors.charcoal,
     textAlignVertical: 'top',
+  },
+  menuActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: BrandColors.lightGreen,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: Radii.pill,
+  },
+  menuActionText: {
+    color: BrandColors.deepForestGreen,
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  claimCard: {
+    backgroundColor: BrandColors.warmCream,
+    borderRadius: Radii.md,
+    padding: Spacing.md,
+    gap: Spacing.xs,
+    borderWidth: 1,
+    borderColor: BrandColors.saffronAccent,
+    marginTop: Spacing.md,
+  },
+  claimCardTitle: {
+    fontSize: Typography.sizes.xs,
+    fontWeight: '800',
+    color: BrandColors.deepForestGreen,
+  },
+  claimCardText: {
+    fontSize: 11,
+    color: BrandColors.charcoal,
+    lineHeight: 16,
+    marginTop: 2,
+  },
+  formInput: {
+    backgroundColor: BrandColors.white,
+    borderRadius: Radii.md,
+    borderWidth: 1,
+    borderColor: BrandColors.borderSubtle,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 8,
+    fontSize: Typography.sizes.xs,
+    color: BrandColors.charcoal,
+  },
+  formTextArea: {
+    backgroundColor: BrandColors.white,
+    borderRadius: Radii.md,
+    borderWidth: 1,
+    borderColor: BrandColors.borderSubtle,
+    padding: Spacing.md,
+    minHeight: 65,
+    fontSize: Typography.sizes.xs,
+    color: BrandColors.charcoal,
+    textAlignVertical: 'top',
+  },
+  formActionsRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    marginTop: 4,
+  },
+  formSubmitBtn: {
+    flex: 1,
+    backgroundColor: BrandColors.primaryGreen,
+    paddingVertical: Spacing.sm,
+    borderRadius: Radii.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  formSubmitText: {
+    color: BrandColors.white,
+    fontSize: Typography.sizes.xs,
+    fontWeight: '700',
+  },
+  formCancelBtn: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: Radii.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  formCancelText: {
+    color: BrandColors.mutedGrey,
+    fontSize: Typography.sizes.xs,
+    fontWeight: '600',
+  },
+  successBanner: {
+    backgroundColor: BrandColors.lightGreen,
+    padding: Spacing.md,
+    borderRadius: Radii.md,
+    color: BrandColors.deepForestGreen,
+    fontSize: Typography.sizes.xs,
+    fontWeight: '600',
+    marginTop: Spacing.xs,
   },
 });

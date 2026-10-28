@@ -106,23 +106,27 @@ export default function CompareScreen() {
                       </Pressable>
                     </View>
 
-                    {/* Row 1: Google Rating */}
+                    {/* Row 1: Rating */}
                     <View style={styles.metricBlock}>
-                      <Text style={styles.metricLabel}>1. Google Rating</Text>
+                      <Text style={styles.metricLabel}>1. Rating</Text>
                       <Text style={styles.metricValue}>
                         {googleData.googleRating != null
-                          ? `★ ${googleData.googleRating.toFixed(1)} / 5`
-                          : 'Unavailable'}
+                          ? `★ ${googleData.googleRating.toFixed(1)} / 5 (Google)`
+                          : khanaSceneData?.khanaSceneRatingAvg != null
+                            ? `★ ${khanaSceneData.khanaSceneRatingAvg.toFixed(1)} / 5 (KhanaScene)`
+                            : 'Unavailable'}
                       </Text>
                     </View>
 
-                    {/* Row 2: Google Review Count */}
+                    {/* Row 2: Review Count */}
                     <View style={styles.metricBlock}>
-                      <Text style={styles.metricLabel}>2. Google Review Count</Text>
+                      <Text style={styles.metricLabel}>2. Review Count</Text>
                       <Text style={styles.metricValue}>
                         {googleData.googleReviewCount != null
-                          ? `${googleData.googleReviewCount.toLocaleString()} reviews`
-                          : 'Unavailable'}
+                          ? `${googleData.googleReviewCount.toLocaleString()} reviews (Google)`
+                          : khanaSceneData?.khanaSceneReviewCount != null
+                            ? `${khanaSceneData.khanaSceneReviewCount} reviews (KhanaScene)`
+                            : 'Unavailable'}
                       </Text>
                     </View>
 
@@ -173,7 +177,10 @@ export default function CompareScreen() {
                           ? 'Open Now'
                           : googleData.openNow === false
                             ? 'Closed'
-                            : 'Hours unavailable'}
+                            : googleData.regularOpeningHoursText &&
+                                googleData.regularOpeningHoursText.length > 0
+                              ? googleData.regularOpeningHoursText[0]
+                              : 'Hours unavailable'}
                       </Text>
                     </View>
 
