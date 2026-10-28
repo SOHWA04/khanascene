@@ -123,11 +123,11 @@ export function buildFreeGoogleMapsSearchUrl(query: string, cityId: CitySlug): s
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(full)}`;
 }
 
-export const LOCAL_DEV_DAILY_QUOTA_LIMIT = 50;
+export const LOCAL_DEV_DAILY_QUOTA_LIMIT = 100;
 
 /**
  * Checks and increments the local daily call counter in AsyncStorage.
- * Prevents laptop testing from ever exceeding 50 calls per day ($0 cost protection).
+ * Prevents laptop testing from ever exceeding 100 calls per day ($0 cost protection).
  */
 export async function checkAndIncrementLocalQuota(): Promise<{ allowed: boolean; currentCount: number }> {
   try {
