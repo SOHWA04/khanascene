@@ -167,3 +167,100 @@ export async function shareBillSplitOnWhatsApp(
     return false;
   }
 }
+
+/**
+ * Calculates a quick per-person split from just amount and friend count.
+ */
+export function calculateQuickSplit(totalAmountPkr: number, splitCount: number) {
+  const safeCount = Math.max(1, splitCount);
+  const perPersonPkr = Math.ceil(totalAmountPkr / safeCount);
+  return {
+    totalPkr: totalAmountPkr,
+    splitCount: safeCount,
+    perPersonPkr,
+  };
+}
+
+/**
+ * Formats a personalized WhatsApp nudge / reminder for a specific pending friend.
+ */
+export function formatFriendNudgeWhatsAppMessage(params: {
+  friendName: string;
+  dawatTitle: string;
+  sharePkr: number;
+  paymentAccountSummary?: string;
+}): string {
+  const { friendName, dawatTitle, sharePkr, paymentAccountSummary } = params;
+  let msg = `Salam ${friendName.trim()}! 👋\n`;
+  msg += `*KhanaScene Contri Reminder* for *${dawatTitle.trim()}*:\n\n`;
+  msg += `💸 Your share: *Rs ${sharePkr.toLocaleString('en-PK')}*\n`;
+
+  if (paymentAccountSummary && paymentAccountSummary.trim().length > 0) {
+    msg += `📲 *Transfer to:* ${paymentAccountSummary.trim()}\n`;
+  }
+
+  msg += `\nShabash jaldi send kardo taake bill settle ho jaye! 🙏🍕\n`;
+  msg += `_Sent via KhanaScene_`;
+  return msg;
+}
+
+/**
+ * Formats the complete group contri status report for WhatsApp.
+ */
+export function formatContriStatusWhatsAppMessage(params: {
+  dawatTitle: string;
+  totalPkr: number;
+  perPersonPkr: number;
+  friends: { name: string; isPaid: boolean; sharePkr: number }[];
+  paymentAccountSummary?: string;
+}): string {
+  const { dawatTitle, totalPkr, perPersonPkr, friends, paymentAccountSummary } = params;
+  const paidCount = friends.filter((f) => f.isPaid).length;
+  const totalFriends = friends.length;
+
+  let msg = `📊 *KhanaScene Contri Update — ${dawatTitle.trim()}*\n`;
+  msg += `---------------------------------\n`;
+  msg += `💰 Total Bill: Rs ${totalPkr.toLocaleString('en-PK')} (${totalFriends} log, Rs ${perPersonPkr.toLocaleString('en-PK')}/person)\n`;
+  msg += `Status: ${paidCount}/${totalFriends} paid\n\n`;
+
+  friends.forEach((f) => {
+    if (f.isPaid) {
+      msg += `✅ *${f.name}* (Paid)\n`;
+    } else {
+      msg += `⏳ *${f.name}* — Pending Rs ${f.sharePkr.toLocaleString('en-PK')}\n`;
+    }
+  });
+
+  if (paymentAccountSummary && paymentAccountSummary.trim().length > 0) {
+    msg += `\n📲 *Transfer to:* ${paymentAccountSummary.trim()}\n`;
+  }
+
+  msg += `\n_Khana kahan? Scene yahan._`;
+  return msg;
+}
+
+/**
+ * Opens WhatsApp with a personalized friend nudge message.
+ */
+export async function shareFriendNudgeOnWhatsApp(
+  params: {
+    friendName: string;
+    dawatTitle: string;
+    sharePkr: number;
+    paymentAccountSummary?: string;
+    phoneNumber?: string;
+  }
+): Promise<boolean> {
+  const text = formatFriendNudgeWhatsAppMessage(params);
+  const phoneParam = params.phoneNumber ? `phone=${encodeURIComponent(params.phoneNumber)}&` : '';
+  const url = `https://wa.me/?${phoneParam}text=${encodeURIComponent(text)}`;
+
+  try {
+    await Linking.openURL(url);
+    return true;
+  } catch (err) {
+    console.error('Failed to open WhatsApp for friend nudge:', err);
+    return false;
+  }
+}
+

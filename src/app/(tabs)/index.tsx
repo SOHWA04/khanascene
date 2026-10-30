@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 
 import { CitySelector } from '@/components/CitySelector';
 import { ComparisonTrayBar } from '@/components/ComparisonTrayBar';
+import { EasyBillSplitterModal } from '@/components/EasyBillSplitterModal';
 import { GoogleAttributionBadge } from '@/components/GoogleAttributionBadge';
 import { KhanaSceneLogo } from '@/components/KhanaSceneLogo';
 import { RestaurantCard } from '@/components/RestaurantCard';
@@ -26,6 +27,7 @@ import { requestOnDemandUserLocation } from '@/utils/location';
 import { Radii } from '@/theme';
 
 const QUICK_FILTERS = [
+  { id: 'easy-split', label: '⚡ Easy Bill Split', icon: 'flash-outline' as const },
   { id: 'near-me', label: 'Near Me', icon: 'navigate-outline' as const },
   { id: 'card-deals', label: 'Bank Discounts', icon: 'card-outline' as const },
   { id: 'open-now', label: 'Open Now', icon: 'time-outline' as const },
@@ -49,6 +51,9 @@ export default function ExploreScreen() {
   } = usePreferencesStore();
   const activeCity = INITIAL_CITIES[selectedCity];
   const [locationNotice, setLocationNotice] = useState<string | null>(null);
+  const { split } = useLocalSearchParams<{ split?: string }>();
+  const [showEasySplitter, setShowEasySplitter] = useState(false);
+  const isSplitVisible = showEasySplitter || split === '1';
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['explore-sections', selectedCity],
@@ -56,6 +61,11 @@ export default function ExploreScreen() {
   });
 
   const handleQuickFilterPress = async (filterId: string) => {
+    if (filterId === 'easy-split') {
+      setShowEasySplitter(true);
+      return;
+    }
+
     if (filterId === 'near-me') {
       const result = await requestOnDemandUserLocation();
       if (!result.granted && result.errorMessage) {
@@ -199,6 +209,28 @@ export default function ExploreScreen() {
           <View style={styles.rouletteAction}>
             <Text style={styles.rouletteBtnText}>Spin Now</Text>
             <Ionicons name="arrow-forward" size={16} color="#0E382C" />
+          </View>
+        </Pressable>
+
+        {/* Easy Bill Splitter Banner */}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Open Easy Bill Splitter"
+          onPress={() => setShowEasySplitter(true)}
+          style={styles.easySplitterBanner}>
+          <View style={styles.easySplitterLeft}>
+            <View style={styles.easySplitterBadge}>
+              <Ionicons name="flash" size={11} color="#047857" />
+              <Text style={styles.easySplitterBadgeText}>DAWAT BILL SPLITTER</Text>
+            </View>
+            <Text style={styles.easySplitterTitle}>Split Bills & Connect Easypaisa</Text>
+            <Text style={styles.easySplitterSubtitle}>
+              Divide any bill in seconds, track friends, and send 1-tap WhatsApp nudges!
+            </Text>
+          </View>
+          <View style={styles.easySplitterAction}>
+            <Text style={styles.easySplitterBtnText}>Split Now</Text>
+            <Ionicons name="arrow-forward" size={14} color="#047857" />
           </View>
         </Pressable>
 
@@ -406,6 +438,13 @@ export default function ExploreScreen() {
           notice={`Data mode: ${APP_CONFIG.dataMode.toUpperCase()} • Google ratings and KhanaScene metadata are strictly separated.`}
         />
       </ScrollView>
+
+      {isSplitVisible ? (
+        <EasyBillSplitterModal
+          visible={isSplitVisible}
+          onClose={() => setShowEasySplitter(false)}
+        />
+      ) : null}
     </SafeAreaView>
   );
 }
@@ -606,6 +645,77 @@ const styles = StyleSheet.create({
     color: '#0E382C',
     fontSize: 12,
     fontWeight: '800',
+  },
+  easySplitterBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F0FDF4',
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1.5,
+    borderColor: '#86EFAC',
+    marginTop: 10,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 4px 16px rgba(16, 185, 129, 0.12)',
+      },
+      default: {
+        elevation: 2,
+        shadowColor: '#10B981',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.12,
+        shadowRadius: 6,
+      },
+    }),
+  },
+  easySplitterLeft: {
+    flex: 1,
+    gap: 4,
+    paddingRight: 10,
+  },
+  easySplitterBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    alignSelf: 'flex-start',
+    backgroundColor: '#DCFCE7',
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    borderRadius: Radii.pill,
+  },
+  easySplitterBadgeText: {
+    color: '#047857',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  easySplitterTitle: {
+    color: '#0E382C',
+    fontSize: 15,
+    fontWeight: '800',
+    letterSpacing: -0.2,
+  },
+  easySplitterSubtitle: {
+    color: '#047857',
+    fontSize: 11,
+    lineHeight: 15,
+  },
+  easySplitterAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: Radii.pill,
+    borderWidth: 1,
+    borderColor: '#86EFAC',
+  },
+  easySplitterBtnText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#047857',
   },
   sectionHeader: {
     flexDirection: 'row',

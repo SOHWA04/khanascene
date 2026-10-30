@@ -12,6 +12,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 
 import { Radii } from '@/theme';
+import { PAYMENT_PROVIDERS } from '@/types/paymentAccounts';
+import { usePaymentAccountsStore } from '@/stores/usePaymentAccountsStore';
 import { BankCardDeal, KhanaSceneMenuItem } from '@/types/restaurant';
 import {
   BillItem,
@@ -63,9 +65,19 @@ export function BillEstimatorModal({
   const [taxPercentage, setTaxPercentage] = useState<number>(16);
   const [serviceChargePercentage, setServiceChargePercentage] = useState<number>(0);
   const [splitCount, setSplitCount] = useState<number>(initialSplitCount);
-  const [paymentAccountText, setPaymentAccountText] = useState<string>('0300-1234567 (Nayapay)');
+  const [paymentAccountText, setPaymentAccountText] = useState<string>('');
   const [showItemPicker, setShowItemPicker] = useState<boolean>(false);
   const [copiedNotice, setCopiedNotice] = useState<boolean>(false);
+
+  const { accounts, formatAccountForTransfer } = usePaymentAccountsStore();
+
+  const defaultAccountFormatted = useMemo(() => {
+    if (accounts.length === 0) return '';
+    const def = accounts.find((a) => a.isDefault) ?? accounts[0];
+    return formatAccountForTransfer(def);
+  }, [accounts, formatAccountForTransfer]);
+
+  const activePaymentAccount = paymentAccountText || defaultAccountFormatted;
 
   const activeDeal = useMemo(() => {
     if (!selectedDealId || selectedDealId === 'none' || selectedDealId === 'custom') {
@@ -154,7 +166,7 @@ export function BillEstimatorModal({
       restaurantName,
       estimateResult,
       activeDeal ? activeDeal.bankName : undefined,
-      paymentAccountText
+      activePaymentAccount
     );
   };
 
@@ -163,7 +175,7 @@ export function BillEstimatorModal({
       restaurantName,
       estimateResult,
       activeDeal ? activeDeal.bankName : undefined,
-      paymentAccountText
+      activePaymentAccount
     );
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
       navigator.clipboard.writeText(text);
@@ -479,12 +491,37 @@ export function BillEstimatorModal({
             </View>
 
             {/* Payment Account Note (EasyPaisa / Nayapay / Sadapay) */}
-            <Text style={styles.fieldLabel}>Nayapay / Sadapay / EasyPaisa Transfer Note (Optional)</Text>
+            <Text style={styles.fieldLabel}>Receive Money via (Easypaisa / Nayapay / Sadapay / Bank)</Text>
+
+            {accounts.length > 0 ? (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.savedAccountsRow}>
+                {accounts.map((acc) => {
+                  const meta = PAYMENT_PROVIDERS[acc.provider];
+                  const formatted = formatAccountForTransfer(acc);
+                  const isSelected = activePaymentAccount === formatted;
+                  return (
+                    <Pressable
+                      key={acc.id}
+                      onPress={() => setPaymentAccountText(formatted)}
+                      style={[
+                        styles.savedAccountChip,
+                        isSelected && { borderColor: meta?.color ?? '#047857', backgroundColor: meta?.badgeBg ?? '#ECFDF5' },
+                      ]}>
+                      <Ionicons name={(meta?.icon as any) ?? 'cash-outline'} size={12} color={meta?.color ?? '#0F172A'} />
+                      <Text style={[styles.savedAccountChipText, isSelected && { color: meta?.badgeColor ?? '#047857', fontWeight: '800' }]}>
+                        {meta?.shortName ?? acc.provider}: {acc.accountNumber}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            ) : null}
+
             <TextInput
               style={styles.textInput}
               placeholder="e.g. Send to 0300-1234567 or @handle"
               placeholderTextColor="#94A3B8"
-              value={paymentAccountText}
+              value={activePaymentAccount}
               onChangeText={setPaymentAccountText}
             />
 
@@ -890,6 +927,28 @@ const styles = StyleSheet.create({
     color: '#64748B',
     marginTop: 8,
     marginBottom: 4,
+  },
+  savedAccountsRow: {
+    flexDirection: 'row',
+    gap: 6,
+    paddingVertical: 4,
+    marginBottom: 6,
+  },
+  savedAccountChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: Radii.pill,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  savedAccountChipText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#0F172A',
   },
   subFieldLabel: {
     fontSize: 11,
