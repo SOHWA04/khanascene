@@ -3,27 +3,18 @@ import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
+import { detectRestaurantEmoji, getCuisineVisual } from '@/constants/cuisines';
 import { useComparisonStore } from '@/stores/useComparisonStore';
 import { useSavedStore } from '@/stores/useSavedStore';
 import { RestaurantDiscoveryItem } from '@/types/restaurant';
 import { formatGooglePriceLevel, formatPkrRange } from '@/utils/ranking';
-import { BrandColors, Radii, Spacing, Typography } from '@/theme';
+import { BrandColors, Radii } from '@/theme';
 
 interface RestaurantCardProps {
   item: RestaurantDiscoveryItem;
   distanceKm?: number | null;
 }
 
-/**
- * Restaurant Card Component
- * Displays available Google Places & KhanaScene information honestly:
- * - Restaurant name & cuisine/category
- * - Google star rating and review count (explicitly labelled as Google)
- * - Price level or verified PKR range
- * - Area or approximate distance
- * - Open/closed status when reliable
- * - Favourite button & Compare toggle
- */
 export function RestaurantCard({ item, distanceKm }: RestaurantCardProps) {
   const { googleData, khanaSceneData, isFixtureData } = item;
   const { isPlaceSaved, toggleSavedPlace } = useSavedStore();
@@ -50,6 +41,15 @@ export function RestaurantCard({ item, distanceKm }: RestaurantCardProps) {
       ? `Up to ${maxDiscount}% Off • ${bankNames}${uniqueBanks.length > 2 ? ` +${uniqueBanks.length - 2} more` : ''}`
       : null;
 
+  const heroDishes = khanaSceneData?.heroDishes ?? [];
+  const cuisineSlug = khanaSceneData?.cuisines?.[0] ?? null;
+  const visual = getCuisineVisual(cuisineSlug);
+  const emoji = detectRestaurantEmoji(
+    googleData.name,
+    googleData.primaryCategory,
+    khanaSceneData?.cuisines
+  );
+
   return (
     <Pressable
       accessibilityRole={Platform.OS === 'web' ? undefined : 'button'}
@@ -61,24 +61,29 @@ export function RestaurantCard({ item, distanceKm }: RestaurantCardProps) {
         })
       }
       style={styles.card}>
-      {/* Top Visual Banner / Header */}
-      <View style={styles.banner}>
-        <View style={styles.bannerLeft}>
-          <View style={styles.avatarIcon}>
-            <Ionicons name="restaurant" size={20} color={BrandColors.saffronAccent} />
+      {/* Top Visual Header */}
+      <View style={styles.cardHeader}>
+        <View style={styles.headerLeft}>
+          <View style={[styles.cuisineIconBadge, { backgroundColor: visual.bg }]}>
+            <Text style={styles.cuisineEmoji}>{emoji}</Text>
           </View>
-          <View style={styles.badgesColumn}>
-            {khanaSceneData?.isKhanaScenePick ? (
-              <View style={styles.pickBadge}>
-                <Ionicons name="sparkles" size={12} color={BrandColors.deepForestGreen} />
-                <Text style={styles.pickBadgeText}>KhanaScene Pick</Text>
-              </View>
-            ) : null}
-            {isFixtureData ? (
-              <View style={styles.fixtureBadge}>
-                <Text style={styles.fixtureBadgeText}>DEV FIXTURE</Text>
-              </View>
-            ) : null}
+          <View style={styles.headerMeta}>
+            <View style={styles.badgesRow}>
+              {khanaSceneData?.isKhanaScenePick ? (
+                <View style={styles.pickBadge}>
+                  <Ionicons name="sparkles" size={11} color="#B45309" />
+                  <Text style={styles.pickBadgeText}>KhanaScene Pick</Text>
+                </View>
+              ) : null}
+              {isFixtureData ? (
+                <View style={styles.fixtureBadge}>
+                  <Text style={styles.fixtureBadgeText}>DEV FIXTURE</Text>
+                </View>
+              ) : null}
+            </View>
+            <Text style={styles.categorySubhead} numberOfLines={1}>
+              {googleData.primaryCategory ?? 'Category unavailable'}
+            </Text>
           </View>
         </View>
 
@@ -90,11 +95,11 @@ export function RestaurantCard({ item, distanceKm }: RestaurantCardProps) {
               e.stopPropagation();
               toggleComparisonPlace(item.placeId);
             }}
-            style={[styles.iconButton, inComparison && styles.iconButtonCompareActive]}>
+            style={[styles.actionBtn, inComparison && styles.actionBtnActiveCompare]}>
             <Ionicons
-              name="git-compare-outline"
-              size={17}
-              color={inComparison ? BrandColors.white : BrandColors.deepForestGreen}
+              name={inComparison ? 'git-compare' : 'git-compare-outline'}
+              size={16}
+              color={inComparison ? BrandColors.white : BrandColors.charcoal}
             />
           </Pressable>
 
@@ -105,56 +110,58 @@ export function RestaurantCard({ item, distanceKm }: RestaurantCardProps) {
               e.stopPropagation();
               toggleSavedPlace(item.placeId);
             }}
-            style={[styles.iconButton, saved && styles.iconButtonSavedActive]}>
+            style={[styles.actionBtn, saved && styles.actionBtnActiveSaved]}>
             <Ionicons
               name={saved ? 'bookmark' : 'bookmark-outline'}
-              size={17}
-              color={saved ? BrandColors.white : BrandColors.deepForestGreen}
+              size={16}
+              color={saved ? BrandColors.white : BrandColors.charcoal}
             />
           </Pressable>
         </View>
       </View>
 
-      {/* Main Content */}
+      {/* Main Body */}
       <View style={styles.body}>
         <Text style={styles.name} numberOfLines={1}>
           {googleData.name}
         </Text>
 
-        <Text style={styles.categoryText} numberOfLines={1}>
-          {googleData.primaryCategory ?? 'Category unavailable'}
-          {googleData.neighbourhood ? ` • ${googleData.neighbourhood}` : ''}
-          {distanceKm != null ? ` • ${distanceKm} km` : ''}
-        </Text>
+        <View style={styles.locationRow}>
+          <Ionicons name="location-sharp" size={13} color={BrandColors.mutedGrey} />
+          <Text style={styles.locationText} numberOfLines={1}>
+            {googleData.neighbourhood ?? googleData.shortAddress ?? 'Islamabad'}
+            {distanceKm != null ? ` • ${distanceKm} km away` : ''}
+          </Text>
+        </View>
 
-        {/* Distinct Rating Badges */}
-        <View style={styles.ratingsRow}>
-          {googleData.googleRating != null ? (
-            <View style={styles.googleRatingBox}>
-              <Ionicons name="star" size={14} color={BrandColors.saffronAccent} />
-              <Text style={styles.ratingValue}>
-                {googleData.googleRating.toFixed(1)}{' '}
+        {/* Ratings & Operating Status */}
+        <View style={styles.statusRow}>
+          <View style={styles.ratingGroup}>
+            {googleData.googleRating != null ? (
+              <View style={styles.ratingBadge}>
+                <Ionicons name="star" size={13} color="#F59E0B" />
+                <Text style={styles.ratingScore}>{googleData.googleRating.toFixed(1)}</Text>
                 <Text style={styles.ratingCount}>
                   ({googleData.googleReviewCount?.toLocaleString('en-PK') ?? 0} Google reviews)
                 </Text>
-              </Text>
-            </View>
-          ) : khanaSceneData?.khanaSceneRatingAvg != null ? (
-            <View style={styles.googleRatingBox}>
-              <Ionicons name="ribbon" size={14} color={BrandColors.primaryGreen} />
-              <Text style={styles.ratingValue}>
-                {khanaSceneData.khanaSceneRatingAvg.toFixed(1)}{' '}
+              </View>
+            ) : khanaSceneData?.khanaSceneRatingAvg != null ? (
+              <View style={styles.ratingBadge}>
+                <Ionicons name="ribbon" size={13} color={BrandColors.primaryGreen} />
+                <Text style={styles.ratingScore}>
+                  {khanaSceneData.khanaSceneRatingAvg.toFixed(1)}
+                </Text>
                 <Text style={styles.ratingCount}>
                   ({khanaSceneData.khanaSceneReviewCount ?? 0} KhanaScene reviews)
                 </Text>
-              </Text>
-            </View>
-          ) : (
-            <View style={styles.googleRatingBox}>
-              <Ionicons name="star-outline" size={14} color={BrandColors.mutedGrey} />
-              <Text style={styles.ratingCount}>Google rating unavailable</Text>
-            </View>
-          )}
+              </View>
+            ) : (
+              <View style={styles.ratingBadgeEmpty}>
+                <Ionicons name="star-outline" size={13} color={BrandColors.mutedGrey} />
+                <Text style={styles.ratingCountMuted}>Google rating unavailable</Text>
+              </View>
+            )}
+          </View>
 
           {googleData.openNow != null ? (
             <View
@@ -162,6 +169,12 @@ export function RestaurantCard({ item, distanceKm }: RestaurantCardProps) {
                 styles.statusPill,
                 googleData.openNow ? styles.statusOpen : styles.statusClosed,
               ]}>
+              <View
+                style={[
+                  styles.statusDot,
+                  { backgroundColor: googleData.openNow ? '#10B981' : '#EF4444' },
+                ]}
+              />
               <Text
                 style={[
                   styles.statusText,
@@ -177,59 +190,62 @@ export function RestaurantCard({ item, distanceKm }: RestaurantCardProps) {
           )}
         </View>
 
-        {/* Parking Badge */}
-        {khanaSceneData?.hasValet ? (
-          <View style={styles.parkingBadgeRow}>
-            <View style={styles.valetBadge}>
-              <Ionicons name="car" size={11} color="#15803D" />
-              <Text style={styles.valetBadgeText}>Valet Available</Text>
-            </View>
-          </View>
-        ) : khanaSceneData?.parkingType === 'dedicated_lot' ? (
-          <View style={styles.parkingBadgeRow}>
-            <View style={styles.dedicatedParkingBadge}>
-              <Ionicons name="car-outline" size={11} color={BrandColors.deepForestGreen} />
-              <Text style={styles.dedicatedParkingText}>Dedicated Parking</Text>
-            </View>
-          </View>
-        ) : khanaSceneData?.parkingType === 'street_crowded' ? (
-          <View style={styles.parkingBadgeRow}>
-            <View style={styles.crowdedParkingBadge}>
-              <Ionicons name="alert-circle-outline" size={11} color="#B45309" />
-              <Text style={styles.crowdedParkingText}>Crowded Street Parking</Text>
-            </View>
-          </View>
-        ) : null}
-
-        {/* Hero Dishes Preview Line */}
-        {khanaSceneData?.heroDishes && khanaSceneData.heroDishes.length > 0 ? (
-          <View style={styles.heroDishesRow}>
-            <Ionicons name="restaurant" size={12} color={BrandColors.saffronAccent} />
-            <Text style={styles.heroDishesText} numberOfLines={1}>
-              Famous for:{' '}
-              <Text style={styles.heroDishesBold}>
-                {khanaSceneData.heroDishes.slice(0, 2).join(', ')}
-                {khanaSceneData.heroDishes.length > 2 ? '...' : ''}
-              </Text>
-            </Text>
-          </View>
-        ) : null}
-
-        {/* Bank Card Discount Pill */}
+        {/* Bank Discounts Chip */}
         {cardDealsSummary ? (
-          <View style={styles.cardDealPill}>
-            <Ionicons name="card" size={13} color="#B45309" />
-            <Text style={styles.cardDealText} numberOfLines={1}>
+          <View style={styles.dealsPill}>
+            <Ionicons name="card" size={14} color="#047857" />
+            <Text style={styles.dealsText} numberOfLines={1}>
               {cardDealsSummary}
             </Text>
           </View>
         ) : null}
 
-        {/* Footer Meta: Price & Attribution */}
+        {/* Must-Try Signature Hero Dishes */}
+        {heroDishes.length > 0 ? (
+          <View style={styles.heroDishesRow}>
+            <Text style={styles.heroDishesPrefix}>Famous for:</Text>
+            <View style={styles.heroChipsContainer}>
+              {heroDishes.slice(0, 2).map((dish, idx) => (
+                <View key={idx} style={styles.heroChip}>
+                  <Text style={styles.heroChipText}>⭐ {dish}</Text>
+                </View>
+              ))}
+              {heroDishes.length > 2 ? (
+                <Text style={styles.heroMoreText}>+{heroDishes.length - 2} more</Text>
+              ) : null}
+            </View>
+          </View>
+        ) : null}
+
+        {/* Parking Reality Badge */}
+        {khanaSceneData?.parkingType && khanaSceneData.parkingType !== 'unknown' ? (
+          <View style={styles.parkingRow}>
+            <Ionicons
+              name={khanaSceneData.hasValet ? 'car' : 'navigate-circle-outline'}
+              size={13}
+              color={BrandColors.mutedGrey}
+            />
+            <Text style={styles.parkingText}>
+              {khanaSceneData.hasValet
+                ? 'Valet Parking Available'
+                : khanaSceneData.parkingType === 'dedicated_lot'
+                  ? 'Dedicated Parking Lot'
+                  : khanaSceneData.parkingType === 'street_moderate'
+                    ? 'Moderate Street Parking'
+                    : 'Crowded Street Parking'}
+            </Text>
+          </View>
+        ) : null}
+
+        {/* Card Footer: Verified PKR Price & Source */}
         <View style={styles.footerRow}>
-          <Text style={styles.priceText}>{priceDisplay}</Text>
-          <Text style={styles.attributionLabel}>
-            Source: {googleData.googleRating != null ? 'Google Maps' : 'KhanaScene Verified'}
+          <View style={styles.priceContainer}>
+            <Text style={styles.priceText}>{priceDisplay}</Text>
+            {hasPkrPrice ? <Text style={styles.taxSubtext}>• Verified Menu</Text> : null}
+          </View>
+
+          <Text style={styles.sourceText}>
+            Source: {hasPkrPrice ? 'KhanaScene' : 'Google Maps'}
           </Text>
         </View>
       </View>
@@ -239,36 +255,59 @@ export function RestaurantCard({ item, distanceKm }: RestaurantCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: BrandColors.white,
-    borderRadius: Radii.lg,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: BrandColors.borderSubtle,
+    borderColor: '#E2E8F0',
     overflow: 'hidden',
+    marginBottom: 14,
+    ...Platform.select({
+      web: {
+        boxShadow:
+          '0 4px 18px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.03)',
+      },
+      default: {
+        elevation: 3,
+        shadowColor: '#0F172A',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
+      },
+    }),
   },
-  banner: {
-    backgroundColor: BrandColors.deepForestGreen,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
+  cardHeader: {
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 8,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
   },
-  bannerLeft: {
+  headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
+    gap: 12,
     flex: 1,
   },
-  avatarIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: Radii.md,
-    backgroundColor: BrandColors.primaryGreen,
+  cuisineIconBadge: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  badgesColumn: {
+  cuisineEmoji: {
+    fontSize: 22,
+  },
+  headerMeta: {
+    flex: 1,
+    gap: 3,
+  },
+  badgesRow: {
     flexDirection: 'row',
+    alignItems: 'center',
     flexWrap: 'wrap',
     gap: 6,
   },
@@ -276,210 +315,248 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: BrandColors.saffronAccent,
+    backgroundColor: '#FEF3C7',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: Radii.pill,
+    borderWidth: 1,
+    borderColor: '#FDE68A',
   },
   pickBadgeText: {
     fontSize: 11,
     fontWeight: '700',
-    color: BrandColors.deepForestGreen,
+    color: '#92400E',
   },
   fixtureBadge: {
-    backgroundColor: 'rgba(255,255,255,0.16)',
-    paddingHorizontal: 7,
-    paddingVertical: 3,
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     borderRadius: Radii.sm,
   },
   fixtureBadgeText: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '700',
-    color: BrandColors.warmCream,
+    color: BrandColors.mutedGrey,
+  },
+  categorySubhead: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: BrandColors.mutedGrey,
   },
   cardActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.xs,
+    gap: 6,
   },
-  iconButton: {
+  actionBtn: {
     width: 34,
     height: 34,
     borderRadius: Radii.pill,
-    backgroundColor: BrandColors.warmCream,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  iconButtonCompareActive: {
-    backgroundColor: BrandColors.saffronAccent,
+  actionBtnActiveCompare: {
+    backgroundColor: '#D97706',
+    borderColor: '#D97706',
   },
-  iconButtonSavedActive: {
-    backgroundColor: BrandColors.primaryGreen,
+  actionBtnActiveSaved: {
+    backgroundColor: '#126149',
+    borderColor: '#126149',
   },
   body: {
-    padding: Spacing.md,
-    gap: Spacing.xs,
+    padding: 16,
+    gap: 10,
   },
   name: {
-    fontSize: Typography.sizes.md,
+    fontSize: 18,
     fontWeight: '800',
-    color: BrandColors.charcoal,
+    color: '#0F172A',
+    letterSpacing: -0.3,
   },
-  categoryText: {
-    fontSize: Typography.sizes.xs,
-    color: BrandColors.mutedGrey,
-    fontWeight: '500',
-  },
-  ratingsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 4,
-    flexWrap: 'wrap',
-    gap: Spacing.xs,
-  },
-  googleRatingBox: {
+  locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
-  ratingValue: {
-    fontSize: Typography.sizes.sm,
-    fontWeight: '700',
-    color: BrandColors.charcoal,
+  locationText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: BrandColors.mutedGrey,
+  },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  ratingGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  ratingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FFFBEB',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#FEF3C7',
+  },
+  ratingBadgeEmpty: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  ratingScore: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#92400E',
   },
   ratingCount: {
-    fontSize: Typography.sizes.xs,
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#B45309',
+  },
+  ratingCountMuted: {
+    fontSize: 12,
     fontWeight: '500',
     color: BrandColors.mutedGrey,
   },
   statusPill: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
     borderRadius: Radii.pill,
   },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
   statusOpen: {
-    backgroundColor: BrandColors.successBackground,
+    backgroundColor: '#ECFDF5',
   },
   statusClosed: {
-    backgroundColor: BrandColors.errorBackground,
+    backgroundColor: '#FEE2E2',
   },
   statusPillNeutral: {
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: Radii.pill,
-    backgroundColor: BrandColors.lightGreen,
+    backgroundColor: '#F1F5F9',
   },
   statusText: {
     fontSize: 11,
     fontWeight: '700',
   },
   statusTextOpen: {
-    color: BrandColors.successGreen,
+    color: '#047857',
   },
   statusTextClosed: {
-    color: BrandColors.errorRed,
+    color: '#B91C1C',
   },
   statusTextNeutral: {
     fontSize: 11,
     fontWeight: '600',
     color: BrandColors.mutedGrey,
   },
-  cardDealPill: {
+  dealsPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    backgroundColor: '#FEF3C7',
+    gap: 6,
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#FDE68A',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: Radii.sm,
-    marginTop: 2,
-    alignSelf: 'flex-start',
+    borderColor: '#A7F3D0',
   },
-  cardDealText: {
-    fontSize: 11,
+  dealsText: {
+    fontSize: 12,
     fontWeight: '700',
-    color: '#92400E',
-  },
-  parkingBadgeRow: {
-    flexDirection: 'row',
-    marginTop: 3,
-  },
-  valetBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#DCFCE7',
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: Radii.sm,
-  },
-  valetBadgeText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#15803D',
-  },
-  dedicatedParkingBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: BrandColors.lightGreen,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: Radii.sm,
-  },
-  dedicatedParkingText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: BrandColors.deepForestGreen,
-  },
-  crowdedParkingBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#FEF3C7',
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: Radii.sm,
-  },
-  crowdedParkingText: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: '#B45309',
+    color: '#065F46',
+    flex: 1,
   },
   heroDishesRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    marginTop: 3,
+    flexWrap: 'wrap',
+    gap: 6,
   },
-  heroDishesText: {
-    fontSize: 11,
-    color: BrandColors.mutedGrey,
-    flex: 1,
-  },
-  heroDishesBold: {
-    color: BrandColors.charcoal,
+  heroDishesPrefix: {
+    fontSize: 12,
     fontWeight: '700',
+    color: '#0F172A',
+  },
+  heroChipsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  heroChip: {
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: Radii.sm,
+  },
+  heroChipText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#334155',
+  },
+  heroMoreText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: BrandColors.mutedGrey,
+  },
+  parkingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  parkingText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: BrandColors.mutedGrey,
   },
   footerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: BrandColors.borderSubtle,
-    paddingTop: Spacing.xs,
-    marginTop: 4,
+    borderTopColor: '#F1F5F9',
+    marginTop: 2,
+  },
+  priceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   priceText: {
-    fontSize: Typography.sizes.xs,
-    fontWeight: '700',
-    color: BrandColors.primaryGreen,
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#0E382C',
   },
-  attributionLabel: {
+  taxSubtext: {
     fontSize: 11,
+    fontWeight: '600',
     color: BrandColors.mutedGrey,
+  },
+  sourceText: {
+    fontSize: 11,
+    color: '#94A3B8',
+    fontWeight: '500',
   },
 });

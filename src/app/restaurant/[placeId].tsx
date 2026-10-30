@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import {
   Linking,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -35,7 +36,7 @@ import {
 import { BrandColors, Radii, Spacing, Typography } from '@/theme';
 
 export default function RestaurantDetailScreen() {
-  const { placeId } = useLocalSearchParams<{ placeId: string }>();
+  const { placeId, estimator } = useLocalSearchParams<{ placeId: string; estimator?: string }>();
   const resolvedPlaceId = placeId ?? 'unknown';
 
   const { isPlaceSaved, toggleSavedPlace } = useSavedStore();
@@ -82,6 +83,23 @@ export default function RestaurantDetailScreen() {
   const allMenuItems = useMemo(() => {
     return item?.khanaSceneData?.menus?.flatMap((m) => m.items) ?? [];
   }, [item?.khanaSceneData?.menus]);
+
+  const isEstimatorVisible = showBillEstimator || estimator === '1';
+
+  const resolvedEstimatorInitialItems = useMemo(() => {
+    if (estimatorInitialItems.length > 0) {
+      return estimatorInitialItems;
+    }
+    if (estimator === '1' && allMenuItems.length > 0) {
+      return allMenuItems.slice(0, 3).map((menuItem) => ({
+        id: menuItem.id,
+        name: menuItem.name,
+        pricePkr: menuItem.pricePkr,
+        quantity: 1,
+      }));
+    }
+    return [];
+  }, [estimatorInitialItems, estimator, allMenuItems]);
 
   if (isLoading) {
     return (
@@ -275,7 +293,18 @@ export default function RestaurantDetailScreen() {
             accessibilityRole="button"
             accessibilityLabel="Estimate Bill & Taxes"
             onPress={() => {
-              setEstimatorInitialItems([]);
+              if (allMenuItems.length > 0) {
+                setEstimatorInitialItems(
+                  allMenuItems.slice(0, 2).map((dish) => ({
+                    id: dish.id,
+                    name: dish.name,
+                    pricePkr: dish.pricePkr,
+                    quantity: 1,
+                  }))
+                );
+              } else {
+                setEstimatorInitialItems([]);
+              }
               setShowBillEstimator(true);
             }}
             style={styles.secondaryActionBtn}>
@@ -336,7 +365,7 @@ export default function RestaurantDetailScreen() {
 
       {/* Section 1: Overview */}
       <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>1. Overview</Text>
+        <Text style={styles.sectionTitle}>Restaurant Overview</Text>
         {khanaSceneData?.pickReason ? (
           <Text style={styles.pickCallout}>{khanaSceneData.pickReason}</Text>
         ) : null}
@@ -445,7 +474,7 @@ export default function RestaurantDetailScreen() {
       {/* Section 2: Google Reviews */}
       <View style={styles.sectionCard}>
         <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>2. Google Reviews</Text>
+          <Text style={styles.sectionTitle}>Google Maps Reviews</Text>
           <Pressable onPress={openGoogleMapsListing}>
             <Text style={styles.externalLinkText}>View all on Google Maps</Text>
           </Pressable>
@@ -501,7 +530,7 @@ export default function RestaurantDetailScreen() {
       {/* Section 3: Menu & Verified Prices */}
       <View style={styles.sectionCard}>
         <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionTitle}>3. Menu & Verified Prices (PKR)</Text>
+          <Text style={styles.sectionTitle}>Verified Menu & Prices (PKR)</Text>
           <Pressable onPress={() => setShowMenuUpdateForm((v) => !v)}>
             <Text style={styles.externalLinkText}>
               {showMenuUpdateForm ? 'Cancel' : 'Suggest Price Update'}
@@ -891,14 +920,14 @@ export default function RestaurantDetailScreen() {
         phoneNumber={contactPhone}
       />
 
-      {showBillEstimator ? (
+      {isEstimatorVisible ? (
         <BillEstimatorModal
-          visible={showBillEstimator}
+          visible={isEstimatorVisible}
           onClose={() => setShowBillEstimator(false)}
           restaurantName={googleData.name}
           availableMenuItems={allMenuItems}
           availableCardDeals={khanaSceneData?.cardDeals ?? []}
-          initialItems={estimatorInitialItems}
+          initialItems={resolvedEstimatorInitialItems}
         />
       ) : null}
     </ScrollView>
@@ -912,12 +941,24 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.xxl,
   },
   heroCard: {
-    backgroundColor: BrandColors.white,
-    borderRadius: Radii.lg,
-    padding: Spacing.lg,
-    gap: Spacing.md,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 20,
+    gap: 14,
     borderWidth: 1,
-    borderColor: BrandColors.borderSubtle,
+    borderColor: '#E2E8F0',
+    ...Platform.select({
+      web: {
+        boxShadow: '0 4px 18px rgba(15, 23, 42, 0.06)',
+      },
+      default: {
+        elevation: 3,
+        shadowColor: '#0F172A',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
+      },
+    }),
   },
   badgeRow: {
     flexDirection: 'row',
@@ -1061,12 +1102,24 @@ const styles = StyleSheet.create({
     color: BrandColors.white,
   },
   sectionCard: {
-    backgroundColor: BrandColors.white,
-    borderRadius: Radii.lg,
-    padding: Spacing.lg,
-    gap: Spacing.sm,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 20,
+    gap: 12,
     borderWidth: 1,
-    borderColor: BrandColors.borderSubtle,
+    borderColor: '#E2E8F0',
+    ...Platform.select({
+      web: {
+        boxShadow: '0 4px 18px rgba(15, 23, 42, 0.05)',
+      },
+      default: {
+        elevation: 2,
+        shadowColor: '#0F172A',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 6,
+      },
+    }),
   },
   sectionHeaderRow: {
     flexDirection: 'row',

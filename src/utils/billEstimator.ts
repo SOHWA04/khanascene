@@ -97,7 +97,8 @@ export function calculateBillEstimate(params: BillEstimatorParams): BillEstimate
 export function formatBillSplitWhatsAppMessage(
   restaurantName: string,
   result: BillEstimateResult,
-  bankName?: string
+  bankName?: string,
+  paymentAccountNote?: string
 ): string {
   const {
     subtotalPkr,
@@ -112,7 +113,8 @@ export function formatBillSplitWhatsAppMessage(
     perPersonPkr,
   } = result;
 
-  let msg = `🍽️ *KhanaScene Dawat Bill Split — ${restaurantName.trim()}*\n\n`;
+  let msg = `🍽️ *KhanaScene Dawat Bill Split — ${restaurantName.trim()}*\n`;
+  msg += `---------------------------------\n`;
   msg += `• *Food Subtotal:* Rs ${subtotalPkr.toLocaleString('en-PK')}\n`;
 
   if (discountAmountPkr > 0) {
@@ -132,7 +134,12 @@ export function formatBillSplitWhatsAppMessage(
   msg += `💰 *Total Estimated Bill:* Rs ${totalPkr.toLocaleString('en-PK')}\n`;
 
   if (splitCount > 1) {
-    msg += `👥 *Split between ${splitCount} people:* *Rs ${perPersonPkr.toLocaleString('en-PK')} / person*\n`;
+    msg += `👥 *Split between ${splitCount} people:* *Rs ${perPersonPkr.toLocaleString('en-PK')} / person*\n\n`;
+    msg += `💸 *Contri Alert:* ${splitCount} log hain, sab apna hissa send kardo! 🙏\n`;
+  }
+
+  if (paymentAccountNote && paymentAccountNote.trim().length > 0) {
+    msg += `📲 *Transfer to:* ${paymentAccountNote.trim()} (Nayapay/Sadapay/EasyPaisa)\n`;
   }
 
   msg += `\n_Calculated via KhanaScene (Khana kahan? Scene yahan.)_`;
@@ -146,9 +153,10 @@ export function formatBillSplitWhatsAppMessage(
 export async function shareBillSplitOnWhatsApp(
   restaurantName: string,
   result: BillEstimateResult,
-  bankName?: string
+  bankName?: string,
+  paymentAccountNote?: string
 ): Promise<boolean> {
-  const text = formatBillSplitWhatsAppMessage(restaurantName, result, bankName);
+  const text = formatBillSplitWhatsAppMessage(restaurantName, result, bankName, paymentAccountNote);
   const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
 
   try {

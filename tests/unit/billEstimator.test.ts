@@ -83,4 +83,24 @@ describe('Bill & Tax Estimator Utilities', () => {
     expect(msg).toContain('Split between 4 people');
     expect(msg).toContain('KhanaScene');
   });
+
+  it('formats contri message with Nayapay / Sadapay handle', () => {
+    const result = calculateBillEstimate({
+      restaurantName: 'Cheezious F-7',
+      items: [{ id: '1', name: 'Pizza', pricePkr: 2000, quantity: 2 }],
+      bankDiscountPercentage: 15,
+      taxPercentage: 16,
+      splitCount: 4,
+    });
+
+    const msg = formatBillSplitWhatsAppMessage(
+      'Cheezious F-7',
+      result,
+      'Meezan Bank',
+      '03001234567 (Nayapay)'
+    );
+
+    expect(msg).toContain('Contri Alert');
+    expect(msg).toContain('03001234567');
+  });
 });

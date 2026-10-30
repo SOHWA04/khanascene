@@ -2,7 +2,7 @@ import React from 'react';
 import { Tabs } from 'expo-router';
 import { Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { BrandColors, Typography } from '@/theme';
+import { BrandColors } from '@/theme';
 
 /**
  * Primary Bottom Navigation Destinations:
@@ -16,19 +16,25 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: BrandColors.primaryGreen,
-        tabBarInactiveTintColor: BrandColors.mutedGrey,
+        tabBarActiveTintColor: '#0E382C',
+        tabBarInactiveTintColor: '#94A3B8',
         tabBarStyle: {
-          backgroundColor: BrandColors.white,
-          borderTopColor: BrandColors.borderSubtle,
+          backgroundColor: '#FFFFFF',
+          borderTopColor: '#F1F5F9',
           borderTopWidth: 1,
-          height: Platform.select({ ios: 86, android: 66, default: 64 }),
-          paddingTop: 6,
-          paddingBottom: Platform.select({ ios: 24, android: 10, default: 10 }),
+          height: Platform.select({ ios: 88, android: 68, default: 68 }),
+          paddingTop: 8,
+          paddingBottom: Platform.select({ ios: 28, android: 12, default: 12 }),
+          ...Platform.select({
+            web: {
+              boxShadow: '0 -4px 16px rgba(15, 23, 42, 0.05)',
+            },
+          }),
         },
         tabBarLabelStyle: {
-          fontSize: Typography.sizes.xs,
-          fontWeight: '600',
+          fontSize: 12,
+          fontWeight: '700',
+          marginTop: 2,
         },
       }}>
       <Tabs.Screen

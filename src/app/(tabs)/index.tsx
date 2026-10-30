@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,13 +16,14 @@ import {
   LoadingStateBlock,
 } from '@/components/StateFeedbackBlocks';
 import { APP_CONFIG, CUISINE_CATEGORIES, INITIAL_CITIES } from '@/config';
+import { getCuisineVisual } from '@/constants/cuisines';
 import {
   calculateHaversineDistanceKm,
   restaurantRepository,
 } from '@/repositories/restaurantRepository';
 import { usePreferencesStore } from '@/stores/usePreferencesStore';
 import { requestOnDemandUserLocation } from '@/utils/location';
-import { BrandColors, Radii, Spacing, Typography } from '@/theme';
+import { Radii } from '@/theme';
 
 const QUICK_FILTERS = [
   { id: 'near-me', label: 'Near Me', icon: 'navigate-outline' as const },
@@ -80,7 +81,7 @@ export default function ExploreScreen() {
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}>
-        {/* Header */}
+        {/* Modern Header */}
         <View style={styles.header}>
           <KhanaSceneLogo size="md" showTagline />
           <Pressable
@@ -88,11 +89,11 @@ export default function ExploreScreen() {
             accessibilityLabel="Account and preferences"
             onPress={() => router.push('/(tabs)/profile')}
             style={styles.profileShortcut}>
-            <Ionicons name="person-circle-outline" size={28} color={BrandColors.deepForestGreen} />
+            <Ionicons name="person-circle-outline" size={32} color="#0E382C" />
           </Pressable>
         </View>
 
-        {/* City & Neighbourhood Selector */}
+        {/* City & Neighbourhood Bar */}
         <View style={styles.locationBar}>
           <CitySelector />
           <ScrollView
@@ -138,24 +139,31 @@ export default function ExploreScreen() {
 
         {locationNotice ? (
           <View style={styles.noticeBanner}>
-            <Ionicons name="information-circle-outline" size={18} color={BrandColors.warningAmber} />
+            <Ionicons name="information-circle-outline" size={18} color="#D97706" />
             <Text style={styles.noticeText}>{locationNotice}</Text>
           </View>
         ) : null}
 
-        {/* Primary Search Bar CTA */}
+        {/* Elevated Search Bar */}
         <Pressable
           accessibilityRole="search"
           accessibilityLabel="Search restaurants, dishes or cuisines"
           onPress={() => router.push('/(tabs)/search')}
           style={styles.searchBox}>
-          <Ionicons name="search" size={20} color={BrandColors.primaryGreen} />
-          <Text style={styles.searchPlaceholder}>
-            Search restaurants, dishes or cuisines in {activeCity.name}
-          </Text>
+          <View style={styles.searchLeft}>
+            <View style={styles.searchIconBox}>
+              <Ionicons name="search" size={18} color="#126149" />
+            </View>
+            <Text style={styles.searchPlaceholder}>
+              Search dishes, cuisines, or sectors in {activeCity.name}...
+            </Text>
+          </View>
+          <View style={styles.filterPillShortcut}>
+            <Ionicons name="options-outline" size={16} color="#64748B" />
+          </View>
         </Pressable>
 
-        {/* Quick Filters */}
+        {/* Quick Filter Carousel */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -165,7 +173,7 @@ export default function ExploreScreen() {
               key={chip.id}
               onPress={() => handleQuickFilterPress(chip.id)}
               style={styles.quickFilterChip}>
-              <Ionicons name={chip.icon} size={15} color={BrandColors.deepForestGreen} />
+              <Ionicons name={chip.icon} size={14} color="#0E382C" />
               <Text style={styles.quickFilterText}>{chip.label}</Text>
             </Pressable>
           ))}
@@ -173,30 +181,33 @@ export default function ExploreScreen() {
 
         <ComparisonTrayBar />
 
-        {/* Khana Roulette Banner CTA */}
+        {/* High-Energy Khana Roulette Banner */}
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Spin the Khana Roulette to decide where to eat"
           onPress={() => router.push('/roulette')}
           style={styles.rouletteBanner}>
-          <View style={styles.rouletteBannerLeft}>
+          <View style={styles.rouletteLeft}>
             <View style={styles.rouletteBadge}>
-              <Text style={styles.rouletteBadgeText}>GROUP SCENE DECIDER 🎲</Text>
+              <Text style={styles.rouletteBadgeText}>🎲 GROUP SCENE DECIDER</Text>
             </View>
-            <Text style={styles.rouletteBannerTitle}>Can&apos;t agree where to eat?</Text>
-            <Text style={styles.rouletteBannerSubtitle}>
-              Spin the Khana Roulette to pick a spot & share to WhatsApp
+            <Text style={styles.rouletteTitle}>Can&apos;t agree where to eat?</Text>
+            <Text style={styles.rouletteSubtitle}>
+              Spin the Khana Roulette & share the pick directly to WhatsApp
             </Text>
           </View>
-          <View style={styles.rouletteBannerRight}>
-            <Ionicons name="dice" size={28} color={BrandColors.warmCream} />
-            <Ionicons name="chevron-forward" size={18} color={BrandColors.warmCream} />
+          <View style={styles.rouletteAction}>
+            <Text style={styles.rouletteBtnText}>Spin Now</Text>
+            <Ionicons name="arrow-forward" size={16} color="#0E382C" />
           </View>
         </Pressable>
 
-        {/* Section 1: Explore by Cuisine */}
+        {/* Cuisines Section */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>1. Explore by Cuisine</Text>
+          <View>
+            <Text style={styles.sectionTitle}>What are you craving?</Text>
+            <Text style={styles.sectionSubtitle}>Explore dishes, karahis, and local cafes</Text>
+          </View>
           <Pressable onPress={() => router.push('/cuisines')}>
             <Text style={styles.sectionLink}>See all</Text>
           </Pressable>
@@ -206,26 +217,31 @@ export default function ExploreScreen() {
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.cuisineRow}>
-          {CUISINE_CATEGORIES.slice(0, 8).map((cuisine) => (
-            <Pressable
-              key={cuisine.id}
-              onPress={() =>
-                router.push({
-                  pathname: '/(tabs)/search',
-                  params: { cuisine: cuisine.slug },
-                })
-              }
-              style={styles.cuisineCard}>
-              <View style={styles.cuisineIconCircle}>
-                <Ionicons name="restaurant-outline" size={22} color={BrandColors.primaryGreen} />
-              </View>
-              <Text style={styles.cuisineName}>{cuisine.name}</Text>
-            </Pressable>
-          ))}
+          {CUISINE_CATEGORIES.slice(0, 10).map((cuisine) => {
+            const visual = getCuisineVisual(cuisine.slug);
+            return (
+              <Pressable
+                key={cuisine.id}
+                onPress={() =>
+                  router.push({
+                    pathname: '/(tabs)/search',
+                    params: { cuisine: cuisine.slug },
+                  })
+                }
+                style={styles.cuisineCard}>
+                <View style={[styles.cuisineIconCircle, { backgroundColor: visual.bg }]}>
+                  <Text style={styles.cuisineEmojiText}>{visual.emoji}</Text>
+                </View>
+                <Text style={styles.cuisineName} numberOfLines={1}>
+                  {cuisine.name}
+                </Text>
+              </Pressable>
+            );
+          })}
         </ScrollView>
 
         {isLoading ? (
-          <LoadingStateBlock label={`Loading ${activeCity.name} discovery sections...`} />
+          <LoadingStateBlock label={`Loading ${activeCity.name} restaurants...`} />
         ) : isError ? (
           <ErrorStateBlock
             message="Could not load discovery sections. Please check your connection."
@@ -233,16 +249,16 @@ export default function ExploreScreen() {
           />
         ) : (
           <>
-            {/* Section 2: Restaurants Near You / In Selected City */}
+            {/* Section: Restaurants Near You / In Selected City */}
             <View style={styles.sectionHeader}>
               <View>
                 <Text style={styles.sectionTitle}>
-                  2. {locationPermissionGranted ? 'Restaurants Near You' : `Restaurants in ${activeCity.name}`}
+                  {locationPermissionGranted ? 'Trending Near You' : `Featured in ${activeCity.name}`}
                 </Text>
                 <Text style={styles.sectionSubtitle}>
                   {locationPermissionGranted
-                    ? 'Sorted using your device location'
-                    : `Showing ${activeCity.name} listings • Tap "Near Me" above to enable location`}
+                    ? 'Sorted by your GPS distance'
+                    : `Showing verified twin-cities restaurants`}
                 </Text>
               </View>
               <Pressable onPress={() => router.push('/(tabs)/search')}>
@@ -267,30 +283,34 @@ export default function ExploreScreen() {
               </View>
             ) : (
               <EmptyStateBlock
-                title={`No live listings loaded for ${activeCity.name}`}
-                message="Connect the Google Places Edge Function in live mode or use dev fixture mode during UI testing."
+                title={`No listings loaded for ${activeCity.name}`}
+                message="Please refresh or check your internet connection."
               />
             )}
 
-            {/* Section 3: Popular Searches */}
+            {/* Popular Searches */}
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>3. Popular Searches in {activeCity.name}</Text>
+              <View>
+                <Text style={styles.sectionTitle}>Popular Food Searches</Text>
+                <Text style={styles.sectionSubtitle}>Top trending cravings in {activeCity.name}</Text>
+              </View>
             </View>
             <View style={styles.popularWrap}>
               {(selectedCity === 'islamabad'
                 ? [
                     'Biryani in Islamabad',
                     'Restaurants in F-7 Markaz',
-                    'Cafés in F-6',
+                    'Kohsar Cafés F-6',
                     'BBQ in Blue Area',
                     'Karahi in F-8',
+                    'Steaks in Beverly Centre',
                   ]
                 : [
-                    'Pulao in Saddar',
+                    'Savour Pulao Saddar',
+                    'Food Street Stadium Road',
+                    'Kartarpura Nihari',
                     'Restaurants in Bahria Town',
-                    'Burgers in Rawalpindi',
-                    'Street food in Commercial Market',
-                    'Family restaurants in Rawalpindi',
+                    'Commercial Market Chaat',
                   ]
               ).map((query) => (
                 <Pressable
@@ -302,18 +322,18 @@ export default function ExploreScreen() {
                     })
                   }
                   style={styles.popularQueryPill}>
-                  <Ionicons name="trending-up-outline" size={14} color={BrandColors.primaryGreen} />
+                  <Ionicons name="trending-up" size={13} color="#126149" />
                   <Text style={styles.popularQueryText}>{query}</Text>
                 </Pressable>
               ))}
             </View>
 
-            {/* Section 4: KhanaScene Picks */}
+            {/* KhanaScene Curated Picks */}
             <View style={styles.sectionHeader}>
               <View>
-                <Text style={styles.sectionTitle}>4. KhanaScene Picks</Text>
+                <Text style={styles.sectionTitle}>👑 KhanaScene Picks</Text>
                 <Text style={styles.sectionSubtitle}>
-                  Curated KhanaScene-owned dataset of notable local dining spots
+                  Editor-curated classics with verified menus & hero dishes
                 </Text>
               </View>
             </View>
@@ -330,14 +350,14 @@ export default function ExploreScreen() {
               />
             )}
 
-            {/* Section 5: Bank Card Discounts */}
+            {/* Bank Card Discounts */}
             {data && data.cardDealsSpots && data.cardDealsSpots.length > 0 ? (
               <>
                 <View style={styles.sectionHeader}>
                   <View>
-                    <Text style={styles.sectionTitle}>5. Bank Card Discounts (Up to 30% Off)</Text>
+                    <Text style={styles.sectionTitle}>💳 Bank Card Deals</Text>
                     <Text style={styles.sectionSubtitle}>
-                      Verified dining discounts on Meezan, Alfalah, HBL, Nayapay & SCB cards
+                      Save up to 30% with Meezan, Alfalah, HBL, & SCB cards
                     </Text>
                   </View>
                   <Pressable
@@ -358,12 +378,12 @@ export default function ExploreScreen() {
               </>
             ) : null}
 
-            {/* Section 6: Budget-Friendly Restaurants */}
+            {/* Budget-Friendly Restaurants */}
             <View style={styles.sectionHeader}>
               <View>
-                <Text style={styles.sectionTitle}>6. Budget-Friendly Restaurants</Text>
+                <Text style={styles.sectionTitle}>💰 Budget-Friendly Gems</Text>
                 <Text style={styles.sectionSubtitle}>
-                  Places with verified budget PKR pricing or Google Inexpensive level
+                  Hearty meals under ₨ 1,200 with honest verified prices
                 </Text>
               </View>
             </View>
@@ -393,215 +413,284 @@ export default function ExploreScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: BrandColors.warmCream,
+    backgroundColor: '#F8F9FA',
   },
   scrollContent: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.xxl,
-    gap: Spacing.lg,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 40,
+    gap: 20,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingVertical: 4,
   },
   profileShortcut: {
-    padding: Spacing.xs,
+    padding: 4,
   },
   locationBar: {
-    gap: Spacing.sm,
+    gap: 10,
   },
   areaRow: {
-    gap: Spacing.sm,
+    gap: 8,
     paddingVertical: 2,
   },
   areaChip: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
     borderRadius: Radii.pill,
-    backgroundColor: BrandColors.white,
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: BrandColors.borderSubtle,
+    borderColor: '#E2E8F0',
   },
   areaChipActive: {
-    backgroundColor: BrandColors.deepForestGreen,
-    borderColor: BrandColors.deepForestGreen,
+    backgroundColor: '#0E382C',
+    borderColor: '#0E382C',
   },
   areaChipText: {
-    fontSize: Typography.sizes.xs,
+    fontSize: 12,
     fontWeight: '600',
-    color: BrandColors.charcoal,
+    color: '#334155',
   },
   areaChipTextActive: {
-    color: BrandColors.white,
+    color: '#FFFFFF',
   },
   noticeBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
-    backgroundColor: BrandColors.warningBackground,
-    padding: Spacing.md,
-    borderRadius: Radii.md,
+    gap: 8,
+    backgroundColor: '#FEF3C7',
+    padding: 12,
+    borderRadius: 12,
   },
   noticeText: {
     flex: 1,
-    fontSize: Typography.sizes.xs,
-    color: BrandColors.warningAmber,
+    fontSize: 12,
+    color: '#92400E',
     fontWeight: '600',
   },
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
-    backgroundColor: BrandColors.white,
-    borderWidth: 1.5,
-    borderColor: BrandColors.primaryGreen,
-    borderRadius: Radii.lg,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: 14,
+    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 3px 12px rgba(15, 23, 42, 0.05)',
+      },
+      default: {
+        elevation: 2,
+        shadowColor: '#0F172A',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 6,
+      },
+    }),
+  },
+  searchLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+  },
+  searchIconBox: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: '#EAF4F0',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   searchPlaceholder: {
-    fontSize: Typography.sizes.sm,
-    color: BrandColors.mutedGrey,
+    fontSize: 13,
+    color: '#64748B',
     fontWeight: '500',
     flex: 1,
   },
+  filterPillShortcut: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   quickFilterRow: {
-    gap: Spacing.sm,
+    gap: 8,
+    paddingVertical: 2,
   },
   quickFilterChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: BrandColors.lightGreen,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderRadius: Radii.pill,
   },
   quickFilterText: {
-    fontSize: Typography.sizes.xs,
+    fontSize: 12,
     fontWeight: '600',
-    color: BrandColors.deepForestGreen,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.sm,
-  },
-  sectionTitle: {
-    fontSize: Typography.sizes.lg,
-    fontWeight: '800',
-    color: BrandColors.deepForestGreen,
-  },
-  sectionSubtitle: {
-    fontSize: Typography.sizes.xs,
-    color: BrandColors.mutedGrey,
-    marginTop: 2,
-  },
-  sectionLink: {
-    fontSize: Typography.sizes.sm,
-    fontWeight: '700',
-    color: BrandColors.primaryGreen,
-  },
-  cuisineRow: {
-    gap: Spacing.md,
-  },
-  cuisineCard: {
-    width: 96,
-    backgroundColor: BrandColors.white,
-    borderRadius: Radii.md,
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.sm,
-    alignItems: 'center',
-    gap: Spacing.xs,
-    borderWidth: 1,
-    borderColor: BrandColors.borderSubtle,
-  },
-  cuisineIconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: Radii.pill,
-    backgroundColor: BrandColors.lightGreen,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cuisineName: {
-    fontSize: Typography.sizes.xs,
-    fontWeight: '600',
-    color: BrandColors.charcoal,
-    textAlign: 'center',
-  },
-  cardList: {
-    gap: Spacing.md,
+    color: '#0E382C',
   },
   rouletteBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: BrandColors.deepForestGreen,
-    padding: Spacing.md,
-    borderRadius: Radii.lg,
-    marginVertical: Spacing.xs,
-    shadowColor: BrandColors.deepForestGreen,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 4,
-    elevation: 2,
+    backgroundColor: '#0E382C',
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.4)',
+    ...Platform.select({
+      web: {
+        boxShadow: '0 6px 20px rgba(14, 56, 44, 0.25)',
+      },
+      default: {
+        elevation: 4,
+        shadowColor: '#0E382C',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 10,
+      },
+    }),
   },
-  rouletteBannerLeft: {
+  rouletteLeft: {
     flex: 1,
-    gap: 3,
-    paddingRight: Spacing.sm,
+    gap: 4,
+    paddingRight: 10,
   },
   rouletteBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: BrandColors.primaryGreen,
-    paddingVertical: 2,
-    paddingHorizontal: Spacing.xs,
-    borderRadius: Radii.sm,
+    backgroundColor: 'rgba(245, 158, 11, 0.2)',
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    borderRadius: Radii.pill,
   },
   rouletteBadgeText: {
-    color: BrandColors.warmCream,
+    color: '#F59E0B',
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: '800',
     letterSpacing: 0.5,
   },
-  rouletteBannerTitle: {
-    color: BrandColors.warmCream,
-    fontSize: Typography.sizes.md,
-    fontWeight: '700',
+  rouletteTitle: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: -0.2,
   },
-  rouletteBannerSubtitle: {
-    color: BrandColors.warmCream,
-    fontSize: Typography.sizes.xs,
-    opacity: 0.85,
+  rouletteSubtitle: {
+    color: '#CBD5E1',
+    fontSize: 12,
+    lineHeight: 16,
   },
-  rouletteBannerRight: {
+  rouletteAction: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
+    backgroundColor: '#F59E0B',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: Radii.pill,
+  },
+  rouletteBtnText: {
+    color: '#0E382C',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    paddingTop: 4,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#0F172A',
+    letterSpacing: -0.3,
+  },
+  sectionSubtitle: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#64748B',
+    marginTop: 2,
+  },
+  sectionLink: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#126149',
+  },
+  cuisineRow: {
+    gap: 12,
+    paddingVertical: 4,
+  },
+  cuisineCard: {
+    width: 82,
+    alignItems: 'center',
+    gap: 8,
+  },
+  cuisineIconCircle: {
+    width: 58,
+    height: 58,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.04)',
+    ...Platform.select({
+      web: {
+        boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+      },
+      default: {
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 3,
+      },
+    }),
+  },
+  cuisineEmojiText: {
+    fontSize: 26,
+  },
+  cuisineName: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#1E293B',
+    textAlign: 'center',
+  },
+  cardList: {
+    gap: 14,
   },
   popularWrap: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: Spacing.sm,
+    gap: 8,
   },
   popularQueryPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: BrandColors.white,
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: BrandColors.borderSubtle,
+    borderColor: '#E2E8F0',
     borderRadius: Radii.pill,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
   },
   popularQueryText: {
-    fontSize: Typography.sizes.xs,
-    fontWeight: '500',
-    color: BrandColors.charcoal,
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#334155',
   },
 });

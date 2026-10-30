@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import {
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -10,11 +11,12 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { BrandColors, Radii, Spacing, Typography } from '@/theme';
+import { Radii } from '@/theme';
 import { BankCardDeal, KhanaSceneMenuItem } from '@/types/restaurant';
 import {
   BillItem,
   calculateBillEstimate,
+  formatBillSplitWhatsAppMessage,
   shareBillSplitOnWhatsApp,
 } from '@/utils/billEstimator';
 
@@ -25,6 +27,7 @@ export interface BillEstimatorModalProps {
   availableMenuItems?: KhanaSceneMenuItem[];
   availableCardDeals?: BankCardDeal[];
   initialItems?: BillItem[];
+  initialSplitCount?: number;
 }
 
 const GST_OPTIONS = [
@@ -49,6 +52,7 @@ export function BillEstimatorModal({
   availableMenuItems = [],
   availableCardDeals = [],
   initialItems = [],
+  initialSplitCount = 4,
 }: BillEstimatorModalProps) {
   const [items, setItems] = useState<BillItem[]>(initialItems);
   const [customAmountText, setCustomAmountText] = useState<string>('');
@@ -58,8 +62,10 @@ export function BillEstimatorModal({
   const [customDiscountText, setCustomDiscountText] = useState<string>('');
   const [taxPercentage, setTaxPercentage] = useState<number>(16);
   const [serviceChargePercentage, setServiceChargePercentage] = useState<number>(0);
-  const [splitCount, setSplitCount] = useState<number>(1);
+  const [splitCount, setSplitCount] = useState<number>(initialSplitCount);
+  const [paymentAccountText, setPaymentAccountText] = useState<string>('0300-1234567 (Nayapay)');
   const [showItemPicker, setShowItemPicker] = useState<boolean>(false);
+  const [copiedNotice, setCopiedNotice] = useState<boolean>(false);
 
   const activeDeal = useMemo(() => {
     if (!selectedDealId || selectedDealId === 'none' || selectedDealId === 'custom') {
@@ -147,8 +153,23 @@ export function BillEstimatorModal({
     shareBillSplitOnWhatsApp(
       restaurantName,
       estimateResult,
-      activeDeal ? activeDeal.bankName : undefined
+      activeDeal ? activeDeal.bankName : undefined,
+      paymentAccountText
     );
+  };
+
+  const handleCopyReceipt = () => {
+    const text = formatBillSplitWhatsAppMessage(
+      restaurantName,
+      estimateResult,
+      activeDeal ? activeDeal.bankName : undefined,
+      paymentAccountText
+    );
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+    }
+    setCopiedNotice(true);
+    setTimeout(() => setCopiedNotice(false), 2500);
   };
 
   return (
@@ -163,8 +184,8 @@ export function BillEstimatorModal({
           <View style={styles.headerRow}>
             <View style={styles.headerTitleWrap}>
               <View style={styles.estimatorBadge}>
-                <Ionicons name="calculator" size={13} color={BrandColors.white} />
-                <Text style={styles.estimatorBadgeText}>Bill & Tax Estimator</Text>
+                <Ionicons name="calculator" size={13} color="#0E382C" />
+                <Text style={styles.estimatorBadgeText}>Contri Splitter & Tax Estimator</Text>
               </View>
               <Text style={styles.title} numberOfLines={1}>
                 {restaurantName}
@@ -175,7 +196,7 @@ export function BillEstimatorModal({
               accessibilityLabel="Close"
               onPress={onClose}
               style={styles.closeBtn}>
-              <Ionicons name="close" size={20} color={BrandColors.charcoal} />
+              <Ionicons name="close" size={20} color="#0F172A" />
             </Pressable>
           </View>
 
@@ -183,8 +204,39 @@ export function BillEstimatorModal({
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}>
             <Text style={styles.subtitle}>
-              Estimate your dine-in bill with verified PKR prices, bank card discounts, and standard 16% GST.
+              No more awkward bill math! Calculate exact per-head contri with 16% GST, service charges, and card deals.
             </Text>
+
+            {/* Live Per-Person Contri Hero Card */}
+            <View style={styles.contriHeroCard}>
+              <View style={styles.contriHeroHeader}>
+                <Ionicons name="cash-outline" size={18} color="#047857" />
+                <Text style={styles.contriHeroTag}>
+                  {estimateResult.splitCount > 1 ? 'CONTRI PER HEAD' : 'ESTIMATED TOTAL'}
+                </Text>
+              </View>
+              <View style={styles.contriPriceRow}>
+                <Text style={styles.contriPriceNumber}>
+                  Rs {estimateResult.perPersonPkr.toLocaleString('en-PK')}
+                </Text>
+                {estimateResult.splitCount > 1 ? (
+                  <Text style={styles.contriPricePer}>/ person</Text>
+                ) : null}
+              </View>
+              <Text style={styles.contriSubtitle}>
+                {estimateResult.splitCount > 1
+                  ? `Split equally between ${estimateResult.splitCount} friends (Total: Rs ${estimateResult.totalPkr.toLocaleString('en-PK')})`
+                  : `Includes GST & discounts (Total: Rs ${estimateResult.totalPkr.toLocaleString('en-PK')})`}
+              </Text>
+              {estimateResult.discountAmountPkr > 0 ? (
+                <View style={styles.contriSavingsTag}>
+                  <Ionicons name="sparkles" size={12} color="#065F46" />
+                  <Text style={styles.contriSavingsText}>
+                    Saved Rs {estimateResult.discountAmountPkr.toLocaleString('en-PK')} with card discount!
+                  </Text>
+                </View>
+              ) : null}
+            </View>
 
             {/* Section 1: Bill Items */}
             <View style={styles.sectionHeaderRow}>
@@ -193,7 +245,7 @@ export function BillEstimatorModal({
                 <Pressable
                   onPress={() => setShowItemPicker((v) => !v)}
                   style={styles.addItemsBtn}>
-                  <Ionicons name="add-circle-outline" size={15} color={BrandColors.primaryGreen} />
+                  <Ionicons name="add-circle" size={15} color="#126149" />
                   <Text style={styles.addItemsBtnText}>
                     {showItemPicker ? 'Close Menu' : '+ Add Item'}
                   </Text>
@@ -201,33 +253,31 @@ export function BillEstimatorModal({
               ) : null}
             </View>
 
-            {/* In-Modal Menu Picker */}
-            {showItemPicker && availableMenuItems.length > 0 ? (
-              <View style={styles.menuPickerBox}>
-                <Text style={styles.menuPickerTitle}>Tap to add to bill estimate:</Text>
-                {availableMenuItems.map((menuItem) => (
+            {/* Menu Item Picker Dropdown */}
+            {showItemPicker ? (
+              <ScrollView nestedScrollEnabled style={styles.menuPickerBox}>
+                <Text style={styles.menuPickerTitle}>Tap to add dishes from verified menu:</Text>
+                {availableMenuItems.map((item) => (
                   <Pressable
-                    key={menuItem.id}
-                    onPress={() => addItemToBill(menuItem)}
+                    key={item.id}
+                    onPress={() => addItemToBill(item)}
                     style={styles.menuPickerItem}>
                     <View style={styles.menuPickerItemText}>
-                      <Text style={styles.menuPickerItemName}>{menuItem.name}</Text>
-                      <Text style={styles.menuPickerItemCategory}>{menuItem.category}</Text>
+                      <Text style={styles.menuPickerItemName}>{item.name}</Text>
+                      <Text style={styles.menuPickerItemCategory}>{item.category}</Text>
                     </View>
                     <Text style={styles.menuPickerItemPrice}>
-                      +Rs {menuItem.pricePkr.toLocaleString('en-PK')}
+                      Rs {item.pricePkr.toLocaleString('en-PK')}
                     </Text>
                   </Pressable>
                 ))}
-              </View>
+              </ScrollView>
             ) : null}
 
             {items.length === 0 ? (
               <View style={styles.emptyItemsBox}>
                 <Text style={styles.emptyItemsText}>
-                  {availableMenuItems.length > 0
-                    ? 'No items selected yet. Tap "+ Add Item" above to choose dishes.'
-                    : 'Enter an estimated food subtotal below.'}
+                  No dishes added yet. Tap &quot;+ Add Item&quot; or type a custom bill amount below.
                 </Text>
               </View>
             ) : (
@@ -235,27 +285,27 @@ export function BillEstimatorModal({
                 {items.map((item) => (
                   <View key={item.id} style={styles.itemRow}>
                     <View style={styles.itemInfo}>
-                      <Text style={styles.itemName}>{item.name}</Text>
+                      <Text style={styles.itemName} numberOfLines={1}>
+                        {item.name}
+                      </Text>
                       <Text style={styles.itemPrice}>
-                        Rs {item.pricePkr.toLocaleString('en-PK')} each
+                        Rs {(item.pricePkr * item.quantity).toLocaleString('en-PK')}{' '}
+                        {item.quantity > 1 ? `(${item.quantity} × Rs ${item.pricePkr.toLocaleString('en-PK')})` : ''}
                       </Text>
                     </View>
                     <View style={styles.qtyControls}>
                       <Pressable
                         onPress={() => updateItemQuantity(item.id, -1)}
                         style={styles.qtyBtn}>
-                        <Ionicons name="remove" size={14} color={BrandColors.charcoal} />
+                        <Ionicons name="remove" size={14} color="#0F172A" />
                       </Pressable>
                       <Text style={styles.qtyText}>{item.quantity}</Text>
                       <Pressable
                         onPress={() => updateItemQuantity(item.id, 1)}
                         style={styles.qtyBtn}>
-                        <Ionicons name="add" size={14} color={BrandColors.charcoal} />
+                        <Ionicons name="add" size={14} color="#0F172A" />
                       </Pressable>
                     </View>
-                    <Text style={styles.itemTotal}>
-                      Rs {(item.pricePkr * item.quantity).toLocaleString('en-PK')}
-                    </Text>
                   </View>
                 ))}
               </View>
@@ -266,7 +316,7 @@ export function BillEstimatorModal({
             <TextInput
               style={styles.textInput}
               placeholder="e.g. 2500 (extra drinks, sides, etc.)"
-              placeholderTextColor={BrandColors.mutedGrey}
+              placeholderTextColor="#94A3B8"
               keyboardType="numeric"
               value={customAmountText}
               onChangeText={setCustomAmountText}
@@ -285,7 +335,7 @@ export function BillEstimatorModal({
                     <Ionicons
                       name="card"
                       size={13}
-                      color={isSelected ? BrandColors.white : '#B45309'}
+                      color={isSelected ? '#FFFFFF' : '#B45309'}
                     />
                     <Text
                       style={[
@@ -327,7 +377,7 @@ export function BillEstimatorModal({
               <TextInput
                 style={styles.textInput}
                 placeholder="Enter discount percentage (e.g. 20)"
-                placeholderTextColor={BrandColors.mutedGrey}
+                placeholderTextColor="#94A3B8"
                 keyboardType="numeric"
                 value={customDiscountText}
                 onChangeText={setCustomDiscountText}
@@ -386,7 +436,23 @@ export function BillEstimatorModal({
             </View>
 
             {/* Section 4: Group Split */}
-            <Text style={styles.sectionHeading}>4. Split Bill Between Friends</Text>
+            <View style={styles.splitHeaderRow}>
+              <Text style={styles.sectionHeading}>4. Split Bill Between Friends</Text>
+              <View style={styles.stepperContainer}>
+                <Pressable
+                  onPress={() => setSplitCount((c) => Math.max(1, c - 1))}
+                  style={styles.stepperBtn}>
+                  <Ionicons name="remove" size={14} color="#0E382C" />
+                </Pressable>
+                <Text style={styles.stepperCountText}>{splitCount}</Text>
+                <Pressable
+                  onPress={() => setSplitCount((c) => Math.min(20, c + 1))}
+                  style={styles.stepperBtn}>
+                  <Ionicons name="add" size={14} color="#0E382C" />
+                </Pressable>
+              </View>
+            </View>
+
             <View style={styles.chipsRow}>
               {SPLIT_OPTIONS.map((count) => {
                 const isSelected = splitCount === count;
@@ -398,19 +464,29 @@ export function BillEstimatorModal({
                     <Ionicons
                       name="people-outline"
                       size={13}
-                      color={isSelected ? BrandColors.white : BrandColors.charcoal}
+                      color={isSelected ? '#FFFFFF' : '#0F172A'}
                     />
                     <Text
                       style={[
                         styles.chipText,
                         isSelected && styles.chipTextSelected,
                       ]}>
-                      {count} {count === 1 ? 'person' : 'people'}
+                      {count} {count === 1 ? 'person' : 'friends'}
                     </Text>
                   </Pressable>
                 );
               })}
             </View>
+
+            {/* Payment Account Note (EasyPaisa / Nayapay / Sadapay) */}
+            <Text style={styles.fieldLabel}>Nayapay / Sadapay / EasyPaisa Transfer Note (Optional)</Text>
+            <TextInput
+              style={styles.textInput}
+              placeholder="e.g. Send to 0300-1234567 or @handle"
+              placeholderTextColor="#94A3B8"
+              value={paymentAccountText}
+              onChangeText={setPaymentAccountText}
+            />
 
             {/* Bill Summary Card */}
             <View style={styles.summaryCard}>
@@ -468,7 +544,7 @@ export function BillEstimatorModal({
               {estimateResult.splitCount > 1 ? (
                 <View style={styles.splitRow}>
                   <View style={styles.splitIconBox}>
-                    <Ionicons name="people" size={16} color={BrandColors.deepForestGreen} />
+                    <Ionicons name="people" size={16} color="#0E382C" />
                   </View>
                   <View style={styles.splitTextBox}>
                     <Text style={styles.splitLabel}>
@@ -483,16 +559,33 @@ export function BillEstimatorModal({
             </View>
           </ScrollView>
 
-          {/* Footer Action */}
+          {/* Footer Actions */}
           <View style={styles.footer}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Share Bill Split on WhatsApp"
-              onPress={handleShareWhatsApp}
-              style={styles.shareBtn}>
-              <Ionicons name="logo-whatsapp" size={18} color={BrandColors.white} />
-              <Text style={styles.shareBtnText}>Share Split on WhatsApp</Text>
-            </Pressable>
+            <View style={styles.footerButtonsRow}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Copy Contri Breakdown"
+                onPress={handleCopyReceipt}
+                style={styles.copyBtn}>
+                <Ionicons
+                  name={copiedNotice ? 'checkmark-circle' : 'copy-outline'}
+                  size={16}
+                  color={copiedNotice ? '#047857' : '#0F172A'}
+                />
+                <Text style={[styles.copyBtnText, copiedNotice && styles.copyBtnTextActive]}>
+                  {copiedNotice ? 'Copied! ✅' : 'Copy'}
+                </Text>
+              </Pressable>
+
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Share Bill Split on WhatsApp"
+                onPress={handleShareWhatsApp}
+                style={styles.shareBtn}>
+                <Ionicons name="logo-whatsapp" size={18} color="#FFFFFF" />
+                <Text style={styles.shareBtnText}>Share Contri on WhatsApp</Text>
+              </Pressable>
+            </View>
           </View>
         </View>
       </View>
@@ -507,104 +600,194 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalCard: {
-    backgroundColor: BrandColors.white,
-    borderTopLeftRadius: Radii.xl,
-    borderTopRightRadius: Radii.xl,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     maxHeight: '92%',
-    paddingBottom: Spacing.xl,
+    paddingBottom: 24,
+    width: '100%',
+    maxWidth: 520,
+    alignSelf: 'center',
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.lg,
-    paddingBottom: Spacing.sm,
+    paddingHorizontal: 16,
+    paddingTop: 18,
+    paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: BrandColors.borderSubtle,
+    borderBottomColor: '#F1F5F9',
   },
   headerTitleWrap: {
     flex: 1,
-    marginRight: Spacing.md,
+    marginRight: 12,
   },
   estimatorBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: BrandColors.primaryGreen,
+    backgroundColor: '#EAF4F0',
     alignSelf: 'flex-start',
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
     borderRadius: Radii.pill,
     marginBottom: 4,
   },
   estimatorBadgeText: {
-    color: BrandColors.white,
-    fontSize: Typography.sizes.xs,
-    fontWeight: '700',
+    color: '#0E382C',
+    fontSize: 11,
+    fontWeight: '800',
   },
   title: {
-    fontSize: Typography.sizes.lg,
+    fontSize: 18,
     fontWeight: '800',
-    color: BrandColors.charcoal,
+    color: '#0F172A',
   },
   closeBtn: {
-    padding: Spacing.xs,
+    padding: 6,
     borderRadius: Radii.pill,
-    backgroundColor: BrandColors.warmCream,
+    backgroundColor: '#F1F5F9',
   },
   scrollContent: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.lg,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 20,
   },
   subtitle: {
-    fontSize: Typography.sizes.xs,
-    color: BrandColors.mutedGrey,
-    marginBottom: Spacing.md,
+    fontSize: 12,
+    color: '#64748B',
+    marginBottom: 14,
     lineHeight: 18,
   },
-  sectionHeading: {
-    fontSize: Typography.sizes.sm,
+  contriHeroCard: {
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1.5,
+    borderColor: '#A7F3D0',
+    borderRadius: 18,
+    padding: 16,
+    marginBottom: 16,
+    gap: 4,
+  },
+  contriHeroHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  contriHeroTag: {
+    fontSize: 11,
     fontWeight: '800',
-    color: BrandColors.deepForestGreen,
-    marginTop: Spacing.md,
-    marginBottom: Spacing.xs,
+    color: '#047857',
+    letterSpacing: 0.5,
+  },
+  contriPriceRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 6,
+  },
+  contriPriceNumber: {
+    fontSize: 28,
+    fontWeight: '900',
+    color: '#065F46',
+  },
+  contriPricePer: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#047857',
+  },
+  contriSubtitle: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#065F46',
+  },
+  contriSavingsTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 4,
+    backgroundColor: '#D1FAE5',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: Radii.pill,
+  },
+  contriSavingsText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#065F46',
+  },
+  sectionHeading: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#0F172A',
+    marginTop: 14,
+    marginBottom: 6,
   },
   sectionHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: Spacing.sm,
-    marginBottom: Spacing.xs,
+    marginTop: 8,
+    marginBottom: 6,
+  },
+  splitHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 14,
+    marginBottom: 6,
+  },
+  stepperContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#F1F5F9',
+    borderRadius: Radii.pill,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  stepperBtn: {
+    width: 24,
+    height: 24,
+    borderRadius: Radii.pill,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepperCountText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#0E382C',
+    minWidth: 16,
+    textAlign: 'center',
   },
   addItemsBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: Radii.pill,
-    backgroundColor: BrandColors.lightGreen,
+    backgroundColor: '#EAF4F0',
   },
   addItemsBtnText: {
-    fontSize: Typography.sizes.xs,
+    fontSize: 12,
     fontWeight: '700',
-    color: BrandColors.deepForestGreen,
+    color: '#126149',
   },
   menuPickerBox: {
-    backgroundColor: BrandColors.warmCream,
-    borderRadius: Radii.md,
-    padding: Spacing.sm,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 14,
+    padding: 10,
     borderWidth: 1,
-    borderColor: BrandColors.borderSubtle,
-    marginBottom: Spacing.sm,
+    borderColor: '#E2E8F0',
+    marginBottom: 10,
     maxHeight: 180,
   },
   menuPickerTitle: {
-    fontSize: Typography.sizes.xs,
+    fontSize: 11,
     fontWeight: '700',
-    color: BrandColors.mutedGrey,
+    color: '#64748B',
     marginBottom: 6,
   },
   menuPickerItem: {
@@ -613,174 +796,172 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 6,
     borderBottomWidth: 1,
-    borderBottomColor: BrandColors.borderSubtle,
+    borderBottomColor: '#F1F5F9',
   },
   menuPickerItemText: {
     flex: 1,
-    marginRight: Spacing.sm,
+    marginRight: 8,
   },
   menuPickerItemName: {
-    fontSize: Typography.sizes.xs,
+    fontSize: 12,
     fontWeight: '700',
-    color: BrandColors.charcoal,
+    color: '#0F172A',
   },
   menuPickerItemCategory: {
     fontSize: 10,
-    color: BrandColors.mutedGrey,
+    color: '#64748B',
   },
   menuPickerItemPrice: {
-    fontSize: Typography.sizes.xs,
+    fontSize: 12,
     fontWeight: '700',
-    color: BrandColors.primaryGreen,
+    color: '#126149',
   },
   emptyItemsBox: {
-    backgroundColor: BrandColors.warmCream,
-    padding: Spacing.md,
-    borderRadius: Radii.md,
-    marginBottom: Spacing.sm,
+    backgroundColor: '#F8FAFC',
+    padding: 14,
+    borderRadius: 14,
+    marginBottom: 10,
     borderWidth: 1,
-    borderColor: BrandColors.borderSubtle,
+    borderColor: '#E2E8F0',
   },
   emptyItemsText: {
-    fontSize: Typography.sizes.xs,
-    color: BrandColors.mutedGrey,
+    fontSize: 12,
+    color: '#64748B',
     textAlign: 'center',
   },
   itemsList: {
-    gap: Spacing.xs,
-    marginBottom: Spacing.sm,
+    gap: 6,
+    marginBottom: 10,
   },
   itemRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: BrandColors.warmCream,
-    padding: Spacing.sm,
-    borderRadius: Radii.md,
+    backgroundColor: '#F8FAFC',
+    padding: 10,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: BrandColors.borderSubtle,
+    borderColor: '#E2E8F0',
   },
   itemInfo: {
     flex: 1,
-    marginRight: Spacing.xs,
+    marginRight: 8,
   },
   itemName: {
-    fontSize: Typography.sizes.xs,
+    fontSize: 13,
     fontWeight: '700',
-    color: BrandColors.charcoal,
+    color: '#0F172A',
   },
   itemPrice: {
     fontSize: 11,
-    color: BrandColors.mutedGrey,
+    color: '#64748B',
   },
   qtyControls: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginRight: Spacing.sm,
+    marginRight: 8,
   },
   qtyBtn: {
-    width: 24,
-    height: 24,
+    width: 26,
+    height: 26,
     borderRadius: Radii.pill,
-    backgroundColor: BrandColors.white,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: BrandColors.borderSubtle,
   },
   qtyText: {
-    fontSize: Typography.sizes.xs,
-    fontWeight: '800',
-    color: BrandColors.charcoal,
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#0F172A',
     minWidth: 16,
     textAlign: 'center',
   },
   itemTotal: {
-    fontSize: Typography.sizes.xs,
+    fontSize: 13,
     fontWeight: '800',
-    color: BrandColors.deepForestGreen,
-    minWidth: 65,
-    textAlign: 'right',
+    color: '#0F172A',
   },
   fieldLabel: {
-    fontSize: Typography.sizes.xs,
+    fontSize: 11,
     fontWeight: '700',
-    color: BrandColors.charcoal,
-    marginTop: Spacing.xs,
-    marginBottom: Spacing.xs,
+    color: '#64748B',
+    marginTop: 8,
+    marginBottom: 4,
   },
   subFieldLabel: {
     fontSize: 11,
     fontWeight: '600',
-    color: BrandColors.mutedGrey,
-    marginTop: 4,
+    color: '#64748B',
+    marginTop: 6,
     marginBottom: 4,
   },
   textInput: {
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: BrandColors.borderSubtle,
-    borderRadius: Radii.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    fontSize: Typography.sizes.xs,
-    color: BrandColors.charcoal,
-    backgroundColor: BrandColors.warmCream,
-    marginBottom: Spacing.sm,
+    borderColor: '#E2E8F0',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    fontSize: 13,
+    color: '#0F172A',
+    marginBottom: 6,
   },
   chipsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: Spacing.xs,
-    marginBottom: Spacing.sm,
+    gap: 8,
+    marginBottom: 8,
   },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs + 2,
-    borderRadius: Radii.pill,
+    gap: 5,
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: BrandColors.borderSubtle,
-    backgroundColor: BrandColors.warmCream,
+    borderColor: '#E2E8F0',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: Radii.pill,
   },
   chipSelected: {
-    backgroundColor: BrandColors.primaryGreen,
-    borderColor: BrandColors.primaryGreen,
+    backgroundColor: '#0E382C',
+    borderColor: '#0E382C',
   },
   chipDealSelected: {
     backgroundColor: '#B45309',
     borderColor: '#B45309',
   },
   chipText: {
-    fontSize: Typography.sizes.xs,
+    fontSize: 12,
     fontWeight: '600',
-    color: BrandColors.charcoal,
+    color: '#334155',
   },
   chipTextSelected: {
-    color: BrandColors.white,
+    color: '#FFFFFF',
   },
   dealNotice: {
     fontSize: 11,
-    fontStyle: 'italic',
     color: '#B45309',
-    marginBottom: Spacing.sm,
+    fontStyle: 'italic',
+    marginBottom: 6,
   },
   summaryCard: {
-    backgroundColor: BrandColors.warmCream,
-    borderRadius: Radii.lg,
-    padding: Spacing.md,
-    marginTop: Spacing.md,
-    borderWidth: 1.5,
-    borderColor: BrandColors.primaryGreen,
-    gap: 6,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    gap: 8,
+    marginTop: 12,
   },
   summaryTitle: {
-    fontSize: Typography.sizes.sm,
+    fontSize: 13,
     fontWeight: '800',
-    color: BrandColors.deepForestGreen,
-    marginBottom: 4,
+    color: '#0F172A',
+    marginBottom: 2,
   },
   summaryRow: {
     flexDirection: 'row',
@@ -788,27 +969,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   summaryLabel: {
-    fontSize: Typography.sizes.xs,
-    color: BrandColors.charcoal,
+    fontSize: 12,
+    color: '#64748B',
   },
   summaryValue: {
-    fontSize: Typography.sizes.xs,
-    fontWeight: '600',
-    color: BrandColors.charcoal,
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#0F172A',
   },
   summaryLabelGreen: {
-    fontSize: Typography.sizes.xs,
+    fontSize: 12,
     fontWeight: '700',
-    color: '#15803D',
+    color: '#047857',
   },
   summaryValueGreen: {
-    fontSize: Typography.sizes.xs,
+    fontSize: 12,
     fontWeight: '700',
-    color: '#15803D',
+    color: '#047857',
   },
   divider: {
     height: 1,
-    backgroundColor: BrandColors.borderSubtle,
+    backgroundColor: '#E2E8F0',
     marginVertical: 4,
   },
   totalRow: {
@@ -818,31 +999,31 @@ const styles = StyleSheet.create({
     paddingTop: 2,
   },
   totalLabel: {
-    fontSize: Typography.sizes.sm,
+    fontSize: 14,
     fontWeight: '800',
-    color: BrandColors.deepForestGreen,
+    color: '#0E382C',
   },
   totalValue: {
-    fontSize: Typography.sizes.md,
+    fontSize: 16,
     fontWeight: '900',
-    color: BrandColors.deepForestGreen,
+    color: '#0E382C',
   },
   splitRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
-    backgroundColor: BrandColors.white,
-    padding: Spacing.sm,
-    borderRadius: Radii.md,
-    marginTop: 6,
+    gap: 8,
+    backgroundColor: '#FFFFFF',
+    padding: 10,
+    borderRadius: 12,
+    marginTop: 4,
     borderWidth: 1,
-    borderColor: BrandColors.borderSubtle,
+    borderColor: '#E2E8F0',
   },
   splitIconBox: {
-    width: 32,
-    height: 32,
+    width: 28,
+    height: 28,
     borderRadius: Radii.pill,
-    backgroundColor: BrandColors.lightGreen,
+    backgroundColor: '#EAF4F0',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -851,35 +1032,70 @@ const styles = StyleSheet.create({
   },
   splitLabel: {
     fontSize: 11,
-    color: BrandColors.mutedGrey,
+    color: '#64748B',
     fontWeight: '600',
   },
   splitValue: {
-    fontSize: Typography.sizes.sm,
+    fontSize: 13,
     fontWeight: '800',
-    color: BrandColors.primaryGreen,
+    color: '#0E382C',
   },
   footer: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.xs,
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    width: '100%',
+    maxWidth: 520,
+    alignSelf: 'center',
+  },
+  footerButtonsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  copyBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  copyBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  copyBtnTextActive: {
+    color: '#047857',
   },
   shareBtn: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: Spacing.sm,
+    gap: 8,
     backgroundColor: '#25D366',
-    paddingVertical: Spacing.md,
-    borderRadius: Radii.lg,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 3,
+    paddingVertical: 14,
+    borderRadius: 14,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 4px 14px rgba(37, 211, 102, 0.3)',
+      },
+      default: {
+        elevation: 3,
+        shadowColor: '#25D366',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 5,
+      },
+    }),
   },
   shareBtnText: {
-    fontSize: Typography.sizes.sm,
-    fontWeight: '700',
-    color: BrandColors.white,
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#FFFFFF',
   },
 });
