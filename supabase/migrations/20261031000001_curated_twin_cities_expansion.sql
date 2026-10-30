@@ -2349,16 +2349,16 @@ insert into public.restaurant_menus (id, restaurant_record_id, name, source_type
 values ('44444444-4444-4444-8444-000000000001', '33333333-3333-4333-8333-000000000001', 'Main Hilltop Dining Menu', 'khana_scene_verified', '2026-10-30T00:00:00Z')
 on conflict (id) do nothing;
 
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000001000001', '44444444-4444-4444-8444-000000000001', 'Chicken Makhni Handi (Boneless)', 'Authentic recipe prepared fresh daily', 2150, 'PKR', 'Main Courses', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000001000002', '44444444-4444-4444-8444-000000000001', 'Special Cheese Naan', 'Authentic recipe prepared fresh daily', 490, 'PKR', 'Tandoor', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000001000003', '44444444-4444-4444-8444-000000000001', 'Mutton Shinwari Karahi (Half KG)', 'Authentic recipe prepared fresh daily', 2850, 'PKR', 'Karahi & Handi', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000001000004', '44444444-4444-4444-8444-000000000001', 'Monal Special Platter (BBQ)', 'Authentic recipe prepared fresh daily', 4200, 'PKR', 'Charcoal BBQ', true, false, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
 
@@ -2366,16 +2366,16 @@ insert into public.restaurant_menus (id, restaurant_record_id, name, source_type
 values ('44444444-4444-4444-8444-000000000002', '33333333-3333-4333-8333-000000000002', 'Pan-Asian & Wok Specialties', 'khana_scene_verified', '2026-10-30T00:00:00Z')
 on conflict (id) do nothing;
 
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000002000001', '44444444-4444-4444-8444-000000000002', 'Dynamite Tempura Prawns', 'Authentic recipe prepared fresh daily', 1950, 'PKR', 'Starters', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000002000002', '44444444-4444-4444-8444-000000000002', 'Crispy Honey Beef with Sesame', 'Authentic recipe prepared fresh daily', 2350, 'PKR', 'Beef Entrees', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000002000003', '44444444-4444-4444-8444-000000000002', 'Kung Pao Chicken with Roasted Peanuts', 'Authentic recipe prepared fresh daily', 1850, 'PKR', 'Poultry', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000002000004', '44444444-4444-4444-8444-000000000002', 'Wok Special Egg Fried Rice', 'Authentic recipe prepared fresh daily', 950, 'PKR', 'Rice & Noodles', true, false, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
 
@@ -2383,16 +2383,16 @@ insert into public.restaurant_menus (id, restaurant_record_id, name, source_type
 values ('44444444-4444-4444-8444-000000000003', '33333333-3333-4333-8333-000000000003', 'Grill & Gourmet Burgers', 'khana_scene_verified', '2026-10-30T00:00:00Z')
 on conflict (id) do nothing;
 
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000003000001', '44444444-4444-4444-8444-000000000003', 'Wild West Gourmet Beef Burger', 'Authentic recipe prepared fresh daily', 1650, 'PKR', 'Burgers', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000003000002', '44444444-4444-4444-8444-000000000003', 'Chipotle Beef Tenderloin Steak', 'Authentic recipe prepared fresh daily', 2850, 'PKR', 'Prime Steaks', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000003000003', '44444444-4444-4444-8444-000000000003', 'Grilled Tarragon Chicken', 'Authentic recipe prepared fresh daily', 1850, 'PKR', 'Poultry', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000003000004', '44444444-4444-4444-8444-000000000003', 'Molten Chocolate Skillet with Gelato', 'Authentic recipe prepared fresh daily', 980, 'PKR', 'Desserts', true, false, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
 
@@ -2400,16 +2400,16 @@ insert into public.restaurant_menus (id, restaurant_record_id, name, source_type
 values ('44444444-4444-4444-8444-000000000004', '33333333-3333-4333-8333-000000000004', 'Legendary Pulao & Sides', 'khana_scene_verified', '2026-10-30T00:00:00Z')
 on conflict (id) do nothing;
 
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000004000001', '44444444-4444-4444-8444-000000000004', 'Single Chicken Pulao Kabab', 'Authentic recipe prepared fresh daily', 470, 'PKR', 'Pulao Dishes', true, false, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000004000002', '44444444-4444-4444-8444-000000000004', 'Special Double Chicken Pulao with 2 Kababs', 'Authentic recipe prepared fresh daily', 620, 'PKR', 'Pulao Dishes', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000004000003', '44444444-4444-4444-8444-000000000004', 'Crispy Quarter Chicken Roast', 'Authentic recipe prepared fresh daily', 420, 'PKR', 'Roast & BBQ', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000004000004', '44444444-4444-4444-8444-000000000004', 'Traditional Sweet Zarda', 'Authentic recipe prepared fresh daily', 220, 'PKR', 'Dessert', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
 
@@ -2417,13 +2417,13 @@ insert into public.restaurant_menus (id, restaurant_record_id, name, source_type
 values ('44444444-4444-4444-8444-000000000005', '33333333-3333-4333-8333-000000000005', 'Pizzas, Burgers & Rolls', 'khana_scene_verified', '2026-10-30T00:00:00Z')
 on conflict (id) do nothing;
 
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000005000001', '44444444-4444-4444-8444-000000000005', 'Large Crown Crust Stuffed Pizza', 'Authentic recipe prepared fresh daily', 1950, 'PKR', 'Pizzas', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000005000002', '44444444-4444-4444-8444-000000000005', 'Bazinga Supreme Crispy Burger', 'Authentic recipe prepared fresh daily', 650, 'PKR', 'Burgers', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000005000003', '44444444-4444-4444-8444-000000000005', 'Special Bihari Kebab Cheesy Roll', 'Authentic recipe prepared fresh daily', 480, 'PKR', 'Rolls & Platters', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
 
@@ -2431,13 +2431,13 @@ insert into public.restaurant_menus (id, restaurant_record_id, name, source_type
 values ('44444444-4444-4444-8444-000000000006', '33333333-3333-4333-8333-000000000006', 'Wild West Burger Lineup', 'khana_scene_verified', '2026-10-30T00:00:00Z')
 on conflict (id) do nothing;
 
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000006000001', '44444444-4444-4444-8444-000000000006', 'Rancher Crunchy Chicken Burger Combo', 'Authentic recipe prepared fresh daily', 790, 'PKR', 'Burgers', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000006000002', '44444444-4444-4444-8444-000000000006', 'Big Ben Double Beef Patty Burger', 'Authentic recipe prepared fresh daily', 1050, 'PKR', 'Burgers', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000006000003', '44444444-4444-4444-8444-000000000006', 'Rodeo Crispy Loaded Animal Fries', 'Authentic recipe prepared fresh daily', 680, 'PKR', 'Sides & Fries', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
 
@@ -2445,13 +2445,13 @@ insert into public.restaurant_menus (id, restaurant_record_id, name, source_type
 values ('44444444-4444-4444-8444-000000000007', '33333333-3333-4333-8333-000000000007', 'Custom Wok Bowls & Starters', 'khana_scene_verified', '2026-10-30T00:00:00Z')
 on conflict (id) do nothing;
 
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000007000001', '44444444-4444-4444-8444-000000000007', 'Ginyaki Ultimate Bowl (Base + 2 Entrees)', 'Authentic recipe prepared fresh daily', 1450, 'PKR', 'Wok Bowls', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000007000002', '44444444-4444-4444-8444-000000000007', 'Dragon Chilli Chicken', 'Authentic recipe prepared fresh daily', 1250, 'PKR', 'A La Carte', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000007000003', '44444444-4444-4444-8444-000000000007', 'Crispy Honey Sesame Wings', 'Authentic recipe prepared fresh daily', 690, 'PKR', 'Appetizers', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
 
@@ -2459,13 +2459,13 @@ insert into public.restaurant_menus (id, restaurant_record_id, name, source_type
 values ('44444444-4444-4444-8444-000000000008', '33333333-3333-4333-8333-000000000008', 'Rockstar Burgers & Shakes', 'khana_scene_verified', '2026-10-30T00:00:00Z')
 on conflict (id) do nothing;
 
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000008000001', '44444444-4444-4444-8444-000000000008', 'The Grand Mutton Burger', 'Authentic recipe prepared fresh daily', 1450, 'PKR', 'Gourmet Burgers', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000008000002', '44444444-4444-4444-8444-000000000008', 'Messy Jessie Double Cheese Beef Burger', 'Authentic recipe prepared fresh daily', 1350, 'PKR', 'Gourmet Burgers', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000008000003', '44444444-4444-4444-8444-000000000008', 'Lotus Biscoff Cream Shake', 'Authentic recipe prepared fresh daily', 780, 'PKR', 'Shakes', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
 
@@ -2473,13 +2473,13 @@ insert into public.restaurant_menus (id, restaurant_record_id, name, source_type
 values ('44444444-4444-4444-8444-000000000009', '33333333-3333-4333-8333-000000000009', 'Continental Bistro Specialties', 'khana_scene_verified', '2026-10-30T00:00:00Z')
 on conflict (id) do nothing;
 
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000009000001', '44444444-4444-4444-8444-000000000009', 'Prime Black Angus Ribeye Steak', 'Authentic recipe prepared fresh daily', 3450, 'PKR', 'Charcoal Steaks', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000009000002', '44444444-4444-4444-8444-000000000009', 'Wild Truffle & Mushroom Tagliatelle', 'Authentic recipe prepared fresh daily', 1850, 'PKR', 'Handmade Pastas', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000009000003', '44444444-4444-4444-8444-000000000009', 'Trio of Gourmet Beef Sliders', 'Authentic recipe prepared fresh daily', 1450, 'PKR', 'Sliders', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
 
@@ -2487,13 +2487,13 @@ insert into public.restaurant_menus (id, restaurant_record_id, name, source_type
 values ('44444444-4444-4444-8444-000000000010', '33333333-3333-4333-8333-000000000010', 'Smash Burgers & Skillets', 'khana_scene_verified', '2026-10-30T00:00:00Z')
 on conflict (id) do nothing;
 
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000010000001', '44444444-4444-4444-8444-000000000010', 'Smoked Double Beef Smash Burger', 'Authentic recipe prepared fresh daily', 1150, 'PKR', 'Smash Burgers', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000010000002', '44444444-4444-4444-8444-000000000010', 'Tangy Tango Crispy Chicken Burger', 'Authentic recipe prepared fresh daily', 890, 'PKR', 'Chicken Burgers', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000010000003', '44444444-4444-4444-8444-000000000010', 'Hot Skillet Lava Cookie with Ice Cream', 'Authentic recipe prepared fresh daily', 790, 'PKR', 'Desserts', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
 
@@ -2501,13 +2501,13 @@ insert into public.restaurant_menus (id, restaurant_record_id, name, source_type
 values ('44444444-4444-4444-8444-000000000011', '33333333-3333-4333-8333-000000000011', 'Tandoor & Desi Specialties', 'khana_scene_verified', '2026-10-30T00:00:00Z')
 on conflict (id) do nothing;
 
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000011000001', '44444444-4444-4444-8444-000000000011', 'Special Tandoori Chicken Handi (Boneless)', 'Authentic recipe prepared fresh daily', 1750, 'PKR', 'Clay Handis', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000011000002', '44444444-4444-4444-8444-000000000011', 'Mutton Ribs Charcoal Mandi', 'Authentic recipe prepared fresh daily', 2950, 'PKR', 'Mandi & Rice', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000011000003', '44444444-4444-4444-8444-000000000011', 'Fresh Clay Tandoor Cheese Garlic Naan', 'Authentic recipe prepared fresh daily', 380, 'PKR', 'Breads', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
 
@@ -2515,13 +2515,13 @@ insert into public.restaurant_menus (id, restaurant_record_id, name, source_type
 values ('44444444-4444-4444-8444-000000000012', '33333333-3333-4333-8333-000000000012', 'Bakery Classics & Savouries', 'khana_scene_verified', '2026-10-30T00:00:00Z')
 on conflict (id) do nothing;
 
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000012000001', '44444444-4444-4444-8444-000000000012', 'Tehzeeb Signature Pizza Slice (Chicken Supreme)', 'Authentic recipe prepared fresh daily', 420, 'PKR', 'Savouries', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000012000002', '44444444-4444-4444-8444-000000000012', 'Classic Chicken Bread Loaf', 'Authentic recipe prepared fresh daily', 580, 'PKR', 'Savouries', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000012000003', '44444444-4444-4444-8444-000000000012', 'Fresh Cream Pineapple Pastry', 'Authentic recipe prepared fresh daily', 250, 'PKR', 'Pastries', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
 
@@ -2529,13 +2529,13 @@ insert into public.restaurant_menus (id, restaurant_record_id, name, source_type
 values ('44444444-4444-4444-8444-000000000013', '33333333-3333-4333-8333-000000000013', 'Artisan Brews & Pastries', 'khana_scene_verified', '2026-10-30T00:00:00Z')
 on conflict (id) do nothing;
 
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000013000001', '44444444-4444-4444-8444-000000000013', 'Hazelnut Vanilla Signature Latte', 'Authentic recipe prepared fresh daily', 820, 'PKR', 'Hot Espresso', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000013000002', '44444444-4444-4444-8444-000000000013', 'Warm Salted Caramel Fudge Brownie', 'Authentic recipe prepared fresh daily', 680, 'PKR', 'Bakery', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000013000003', '44444444-4444-4444-8444-000000000013', 'Smoked Turkey & Cheese Butter Croissant', 'Authentic recipe prepared fresh daily', 920, 'PKR', 'Sandwiches', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
 
@@ -2543,13 +2543,13 @@ insert into public.restaurant_menus (id, restaurant_record_id, name, source_type
 values ('44444444-4444-4444-8444-000000000014', '33333333-3333-4333-8333-000000000014', 'Hunza Mountain Organic Specialties', 'khana_scene_verified', '2026-10-30T00:00:00Z')
 on conflict (id) do nothing;
 
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000014000001', '44444444-4444-4444-8444-000000000014', 'Fresh River Trout with Mountain Herbs', 'Authentic recipe prepared fresh daily', 2950, 'PKR', 'River Seafood', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000014000002', '44444444-4444-4444-8444-000000000014', 'Gyal with Apricot Oil & Pure Honey', 'Authentic recipe prepared fresh daily', 890, 'PKR', 'Mountain Specialties', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000014000003', '44444444-4444-4444-8444-000000000014', 'Organic Walnut & Fig Honey Tart', 'Authentic recipe prepared fresh daily', 750, 'PKR', 'Desserts', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
 
@@ -2557,13 +2557,13 @@ insert into public.restaurant_menus (id, restaurant_record_id, name, source_type
 values ('44444444-4444-4444-8444-000000000015', '33333333-3333-4333-8333-000000000015', 'Shinwari Fresh Cuts', 'khana_scene_verified', '2026-10-30T00:00:00Z')
 on conflict (id) do nothing;
 
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000015000001', '44444444-4444-4444-8444-000000000015', 'Namkeen Dumba Karahi (Full KG)', 'Authentic recipe prepared fresh daily', 3400, 'PKR', 'Shinwari Karahi', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000015000002', '44444444-4444-4444-8444-000000000015', 'Charcoal Lamb Rib Boti Skewers', 'Authentic recipe prepared fresh daily', 1650, 'PKR', 'Charcoal BBQ', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000015000003', '44444444-4444-4444-8444-000000000015', 'Jumbo Peshawari Chapli Kabab', 'Authentic recipe prepared fresh daily', 650, 'PKR', 'Tawa Kababs', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
 
@@ -2571,13 +2571,13 @@ insert into public.restaurant_menus (id, restaurant_record_id, name, source_type
 values ('44444444-4444-4444-8444-000000000016', '33333333-3333-4333-8333-000000000016', 'Biryani & Karachi Favorites', 'khana_scene_verified', '2026-10-30T00:00:00Z')
 on conflict (id) do nothing;
 
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000016000001', '44444444-4444-4444-8444-000000000016', 'Special Chicken Biryani (Double Chicken + Aloo)', 'Authentic recipe prepared fresh daily', 540, 'PKR', 'Biryani', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000016000002', '44444444-4444-4444-8444-000000000016', 'Special Shahi Beef Haleem', 'Authentic recipe prepared fresh daily', 420, 'PKR', 'Traditional Dishes', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000016000003', '44444444-4444-4444-8444-000000000016', 'Crispy Fried Shami Kababs (Pair)', 'Authentic recipe prepared fresh daily', 220, 'PKR', 'Appetizers', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
 
@@ -2585,13 +2585,13 @@ insert into public.restaurant_menus (id, restaurant_record_id, name, source_type
 values ('44444444-4444-4444-8444-000000000017', '33333333-3333-4333-8333-000000000017', 'Specialty Teas & All-Day Breakfast', 'khana_scene_verified', '2026-10-30T00:00:00Z')
 on conflict (id) do nothing;
 
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000017000001', '44444444-4444-4444-8444-000000000017', 'Clay Pot Cardamom Karak Chai', 'Authentic recipe prepared fresh daily', 340, 'PKR', 'Specialty Teas', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000017000002', '44444444-4444-4444-8444-000000000017', 'Savory Chicken Mushroom Crepe', 'Authentic recipe prepared fresh daily', 920, 'PKR', 'Crepes & Waffles', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000017000003', '44444444-4444-4444-8444-000000000017', 'Peshawari Almond Kahwa with Saffron', 'Authentic recipe prepared fresh daily', 290, 'PKR', 'Traditional Brews', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
 
@@ -2599,13 +2599,13 @@ insert into public.restaurant_menus (id, restaurant_record_id, name, source_type
 values ('44444444-4444-4444-8444-000000000018', '33333333-3333-4333-8333-000000000018', '5-Star Dining & Buffet', 'khana_scene_verified', '2026-10-30T00:00:00Z')
 on conflict (id) do nothing;
 
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000018000001', '44444444-4444-4444-8444-000000000018', 'Executive Sunday Hi-Tea Buffet (Per Person)', 'Authentic recipe prepared fresh daily', 4250, 'PKR', 'Buffet', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000018000002', '44444444-4444-4444-8444-000000000018', 'Pan-Seared Norwegian Salmon with Herb Butter', 'Authentic recipe prepared fresh daily', 4850, 'PKR', 'Seafood', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000018000003', '44444444-4444-4444-8444-000000000018', 'Royal Mutton Dum Biryani Platter', 'Authentic recipe prepared fresh daily', 2450, 'PKR', 'Mughlai', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
 
@@ -2613,13 +2613,13 @@ insert into public.restaurant_menus (id, restaurant_record_id, name, source_type
 values ('44444444-4444-4444-8444-000000000019', '33333333-3333-4333-8333-000000000019', 'Heritage Cantonese & Szechuan', 'khana_scene_verified', '2026-10-30T00:00:00Z')
 on conflict (id) do nothing;
 
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000019000001', '44444444-4444-4444-8444-000000000019', 'Mei Kong Special Chicken Manchurian', 'Authentic recipe prepared fresh daily', 1650, 'PKR', 'Poultry', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000019000002', '44444444-4444-4444-8444-000000000019', 'Szechuan Crispy Hot Prawns', 'Authentic recipe prepared fresh daily', 2250, 'PKR', 'Seafood', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000019000003', '44444444-4444-4444-8444-000000000019', 'Special Mixed Egg Fried Rice', 'Authentic recipe prepared fresh daily', 850, 'PKR', 'Rice', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
 
@@ -2627,13 +2627,13 @@ insert into public.restaurant_menus (id, restaurant_record_id, name, source_type
 values ('44444444-4444-4444-8444-000000000020', '33333333-3333-4333-8333-000000000020', 'Kartarpura Midnight Grills', 'khana_scene_verified', '2026-10-30T00:00:00Z')
 on conflict (id) do nothing;
 
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000020000001', '44444444-4444-4444-8444-000000000020', 'Midnight Desi Ghee Mutton Karahi (1 KG)', 'Authentic recipe prepared fresh daily', 3200, 'PKR', 'Desi Karahi', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000020000002', '44444444-4444-4444-8444-000000000020', 'Charcoal Beef Seekh Kabab (Half Dozen)', 'Authentic recipe prepared fresh daily', 950, 'PKR', 'Charcoal BBQ', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000020000003', '44444444-4444-4444-8444-000000000020', 'Spicy Tawa Fry Boti Plate', 'Authentic recipe prepared fresh daily', 1100, 'PKR', 'Tawa Grills', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
 
@@ -2641,13 +2641,13 @@ insert into public.restaurant_menus (id, restaurant_record_id, name, source_type
 values ('44444444-4444-4444-8444-000000000021', '33333333-3333-4333-8333-000000000021', 'Morning & Midnight Nihari', 'khana_scene_verified', '2026-10-30T00:00:00Z')
 on conflict (id) do nothing;
 
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000021000001', '44444444-4444-4444-8444-000000000021', 'Special Beef Nalli Nihari (with Bone Marrow)', 'Authentic recipe prepared fresh daily', 780, 'PKR', 'Nihari Specialties', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000021000002', '44444444-4444-4444-8444-000000000021', 'Fresh Fried Maghaz (Brain) Topping', 'Authentic recipe prepared fresh daily', 380, 'PKR', 'Nihari Toppings', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000021000003', '44444444-4444-4444-8444-000000000021', 'Fresh Clay Oven Khameeri Roti', 'Authentic recipe prepared fresh daily', 50, 'PKR', 'Breads', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
 
@@ -2655,13 +2655,13 @@ insert into public.restaurant_menus (id, restaurant_record_id, name, source_type
 values ('44444444-4444-4444-8444-000000000022', '33333333-3333-4333-8333-000000000022', 'Chaat, Bhallay & Lassi', 'khana_scene_verified', '2026-10-30T00:00:00Z')
 on conflict (id) do nothing;
 
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000022000001', '44444444-4444-4444-8444-000000000022', 'Special Dahi Bhallay Platter with Papri', 'Authentic recipe prepared fresh daily', 380, 'PKR', 'Street Chaat', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000022000002', '44444444-4444-4444-8444-000000000022', 'Seasonal Mixed Fruit Cream Chaat', 'Authentic recipe prepared fresh daily', 420, 'PKR', 'Fruit Chaat', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000022000003', '44444444-4444-4444-8444-000000000022', 'Thick Malai Sweet Desi Lassi (Glass)', 'Authentic recipe prepared fresh daily', 280, 'PKR', 'Lassi & Drinks', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
 
@@ -2669,13 +2669,13 @@ insert into public.restaurant_menus (id, restaurant_record_id, name, source_type
 values ('44444444-4444-4444-8444-000000000023', '33333333-3333-4333-8333-000000000023', 'Kulfi, Falooda & Sundaes', 'khana_scene_verified', '2026-10-30T00:00:00Z')
 on conflict (id) do nothing;
 
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000023000001', '44444444-4444-4444-8444-000000000023', 'Special Pista Badam Kulfi Falooda', 'Authentic recipe prepared fresh daily', 460, 'PKR', 'Falooda', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000023000002', '44444444-4444-4444-8444-000000000023', 'Signature Mango Ice Cream (Double Scoop)', 'Authentic recipe prepared fresh daily', 380, 'PKR', 'Ice Creams', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000023000003', '44444444-4444-4444-8444-000000000023', 'Traditional Clay Matka Rabri Kheer', 'Authentic recipe prepared fresh daily', 320, 'PKR', 'Traditional Sweets', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
 
@@ -2683,13 +2683,13 @@ insert into public.restaurant_menus (id, restaurant_record_id, name, source_type
 values ('44444444-4444-4444-8444-000000000024', '33333333-3333-4333-8333-000000000024', 'Flagship Bakery & Hot Counter', 'khana_scene_verified', '2026-10-30T00:00:00Z')
 on conflict (id) do nothing;
 
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000024000001', '44444444-4444-4444-8444-000000000024', 'Original Flagship Tehzeeb Pizza Slice', 'Authentic recipe prepared fresh daily', 420, 'PKR', 'Hot Counter', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000024000002', '44444444-4444-4444-8444-000000000024', 'Fresh Flaky Chicken Puff Patties (Pair)', 'Authentic recipe prepared fresh daily', 320, 'PKR', 'Savouries', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000024000003', '44444444-4444-4444-8444-000000000024', 'Traditional Dry Fruit Plum Cake', 'Authentic recipe prepared fresh daily', 850, 'PKR', 'Cakes', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
 
@@ -2697,13 +2697,13 @@ insert into public.restaurant_menus (id, restaurant_record_id, name, source_type
 values ('44444444-4444-4444-8444-000000000025', '33333333-3333-4333-8333-000000000025', 'Stadium Pulao & Fast Counter', 'khana_scene_verified', '2026-10-30T00:00:00Z')
 on conflict (id) do nothing;
 
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000025000001', '44444444-4444-4444-8444-000000000025', 'Special Double Chicken Pulao with 2 Kababs', 'Authentic recipe prepared fresh daily', 620, 'PKR', 'Pulao', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000025000002', '44444444-4444-4444-8444-000000000025', 'Crispy Quarter Chicken Roast', 'Authentic recipe prepared fresh daily', 420, 'PKR', 'Roast', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000025000003', '44444444-4444-4444-8444-000000000025', 'Sweet Zarda Platter', 'Authentic recipe prepared fresh daily', 220, 'PKR', 'Dessert', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
 
@@ -2711,13 +2711,13 @@ insert into public.restaurant_menus (id, restaurant_record_id, name, source_type
 values ('44444444-4444-4444-8444-000000000026', '33333333-3333-4333-8333-000000000026', 'Food Street Karahi & Grills', 'khana_scene_verified', '2026-10-30T00:00:00Z')
 on conflict (id) do nothing;
 
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000026000001', '44444444-4444-4444-8444-000000000026', 'Special White Cream Mutton Karahi (1 KG)', 'Authentic recipe prepared fresh daily', 3350, 'PKR', 'Karahi', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000026000002', '44444444-4444-4444-8444-000000000026', 'Melt-in-Mouth Chicken Malai Boti Plate', 'Authentic recipe prepared fresh daily', 1250, 'PKR', 'BBQ', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000026000003', '44444444-4444-4444-8444-000000000026', 'Sesame Roghni Naan from Clay Oven', 'Authentic recipe prepared fresh daily', 140, 'PKR', 'Tandoor', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
 
@@ -2725,13 +2725,13 @@ insert into public.restaurant_menus (id, restaurant_record_id, name, source_type
 values ('44444444-4444-4444-8444-000000000027', '33333333-3333-4333-8333-000000000027', 'Commercial Market Cheezious Menu', 'khana_scene_verified', '2026-10-30T00:00:00Z')
 on conflict (id) do nothing;
 
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000027000001', '44444444-4444-4444-8444-000000000027', 'Crown Crust Large Pizza', 'Authentic recipe prepared fresh daily', 1950, 'PKR', 'Pizza', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000027000002', '44444444-4444-4444-8444-000000000027', 'Bazinga Supreme Burger', 'Authentic recipe prepared fresh daily', 650, 'PKR', 'Burgers', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000027000003', '44444444-4444-4444-8444-000000000027', 'Cheesy Bihari Roll', 'Authentic recipe prepared fresh daily', 480, 'PKR', 'Rolls', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
 
@@ -2739,13 +2739,13 @@ insert into public.restaurant_menus (id, restaurant_record_id, name, source_type
 values ('44444444-4444-4444-8444-000000000028', '33333333-3333-4333-8333-000000000028', 'Saloon Grills & Shakes', 'khana_scene_verified', '2026-10-30T00:00:00Z')
 on conflict (id) do nothing;
 
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000028000001', '44444444-4444-4444-8444-000000000028', 'Big Ben Double Beef Patty Burger', 'Authentic recipe prepared fresh daily', 1050, 'PKR', 'Burgers', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000028000002', '44444444-4444-4444-8444-000000000028', 'Rancher Crunchy Chicken Burger', 'Authentic recipe prepared fresh daily', 790, 'PKR', 'Burgers', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000028000003', '44444444-4444-4444-8444-000000000028', 'Rodeo Loaded Animal Fries Platter', 'Authentic recipe prepared fresh daily', 680, 'PKR', 'Fries', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
 
@@ -2753,13 +2753,13 @@ insert into public.restaurant_menus (id, restaurant_record_id, name, source_type
 values ('44444444-4444-4444-8444-000000000029', '33333333-3333-4333-8333-000000000029', 'River View Asian Dining', 'khana_scene_verified', '2026-10-30T00:00:00Z')
 on conflict (id) do nothing;
 
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000029000001', '44444444-4444-4444-8444-000000000029', 'Dynamite Tempura Prawns', 'Authentic recipe prepared fresh daily', 1950, 'PKR', 'Starters', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000029000002', '44444444-4444-4444-8444-000000000029', 'Crispy Beef in Honey Sesame', 'Authentic recipe prepared fresh daily', 2350, 'PKR', 'Beef', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000029000003', '44444444-4444-4444-8444-000000000029', 'Kung Pao Chicken with Cashews', 'Authentic recipe prepared fresh daily', 1850, 'PKR', 'Chicken', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
 
@@ -2767,13 +2767,13 @@ insert into public.restaurant_menus (id, restaurant_record_id, name, source_type
 values ('44444444-4444-4444-8444-000000000030', '33333333-3333-4333-8333-000000000030', 'Continental & River View Buffet', 'khana_scene_verified', '2026-10-30T00:00:00Z')
 on conflict (id) do nothing;
 
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000030000001', '44444444-4444-4444-8444-000000000030', 'Grand Continental Hi-Tea Buffet (Per Person)', 'Authentic recipe prepared fresh daily', 2450, 'PKR', 'Buffet', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000030000002', '44444444-4444-4444-8444-000000000030', 'Stuffed Moroccan Chicken with Wild Rice', 'Authentic recipe prepared fresh daily', 1950, 'PKR', 'Continental', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000030000003', '44444444-4444-4444-8444-000000000030', 'Hot Chocolate Molten Lava Cake with Gelato', 'Authentic recipe prepared fresh daily', 890, 'PKR', 'Desserts', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
 
@@ -2781,13 +2781,13 @@ insert into public.restaurant_menus (id, restaurant_record_id, name, source_type
 values ('44444444-4444-4444-8444-000000000031', '33333333-3333-4333-8333-000000000031', 'Original Bun Kabab Counter', 'khana_scene_verified', '2026-10-30T00:00:00Z')
 on conflict (id) do nothing;
 
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000031000001', '44444444-4444-4444-8444-000000000031', 'Special Shami Daal Egg Bun Kabab', 'Authentic recipe prepared fresh daily', 180, 'PKR', 'Bun Kababs', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000031000002', '44444444-4444-4444-8444-000000000031', 'Double Anda Double Shami Special Bun Kabab', 'Authentic recipe prepared fresh daily', 260, 'PKR', 'Bun Kababs', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000031000003', '44444444-4444-4444-8444-000000000031', 'Spicy Potato Fries with Chaat Masala', 'Authentic recipe prepared fresh daily', 140, 'PKR', 'Sides', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
 
@@ -2795,13 +2795,13 @@ insert into public.restaurant_menus (id, restaurant_record_id, name, source_type
 values ('44444444-4444-4444-8444-000000000032', '33333333-3333-4333-8333-000000000032', 'Traditional Milk Sweets', 'khana_scene_verified', '2026-10-30T00:00:00Z')
 on conflict (id) do nothing;
 
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000032000001', '44444444-4444-4444-8444-000000000032', 'Pure Buffalo Milk Thandi Matka Rabri (Cup)', 'Authentic recipe prepared fresh daily', 280, 'PKR', 'Rabri', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000032000002', '44444444-4444-4444-8444-000000000032', 'Shahi Slow-Cooked Kheer Thali', 'Authentic recipe prepared fresh daily', 220, 'PKR', 'Kheer', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
-insert into public.menu_items (id, menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
+insert into public.menu_items (id, restaurant_menu_id, name, description, price, currency_code, category, is_available, is_signature, last_verified_at)
 values ('55555555-5555-4555-8555-000032000003', '44444444-4444-4444-8444-000000000032', 'Special Rabri Falooda Glass', 'Authentic recipe prepared fresh daily', 350, 'PKR', 'Falooda', true, true, '2026-10-30T00:00:00Z')
 on conflict (id) do update set price = excluded.price, is_signature = excluded.is_signature;
 
