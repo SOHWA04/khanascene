@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { detectRestaurantEmoji, getCuisineVisual } from '@/constants/cuisines';
 import { useComparisonStore } from '@/stores/useComparisonStore';
 import { useSavedStore } from '@/stores/useSavedStore';
+import { usePollStore } from '@/stores/usePollStore';
 import { RestaurantDiscoveryItem } from '@/types/restaurant';
 import { formatGooglePriceLevel, formatPkrRange } from '@/utils/ranking';
 import { BrandColors, Radii } from '@/theme';
@@ -22,6 +23,8 @@ export function RestaurantCard({ item, distanceKm }: RestaurantCardProps) {
 
   const saved = isPlaceSaved(item.placeId);
   const inComparison = selectedPlaceIds.includes(item.placeId);
+  const { isCandidateSelected, toggleCandidate } = usePollStore();
+  const inPoll = isCandidateSelected(item.placeId);
 
   const hasPkrPrice =
     khanaSceneData?.priceMinPkr != null || khanaSceneData?.priceMaxPkr != null;
@@ -88,6 +91,21 @@ export function RestaurantCard({ item, distanceKm }: RestaurantCardProps) {
         </View>
 
         <View style={styles.cardActions}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={inPoll ? 'Remove from group poll' : 'Add to group poll'}
+            onPress={(e) => {
+              e.stopPropagation();
+              toggleCandidate(item.placeId);
+            }}
+            style={[styles.actionBtn, inPoll && styles.actionBtnActivePoll]}>
+            <Ionicons
+              name={inPoll ? 'chatbubbles' : 'chatbubbles-outline'}
+              size={15}
+              color={inPoll ? '#FFFFFF' : '#047857'}
+            />
+          </Pressable>
+
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={inComparison ? 'Remove from comparison' : 'Add to comparison'}
@@ -357,6 +375,10 @@ const styles = StyleSheet.create({
     borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  actionBtnActivePoll: {
+    backgroundColor: '#047857',
+    borderColor: '#047857',
   },
   actionBtnActiveCompare: {
     backgroundColor: '#D97706',

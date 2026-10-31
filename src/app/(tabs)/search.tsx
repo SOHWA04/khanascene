@@ -16,6 +16,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { CitySelector } from '@/components/CitySelector';
 import { ComparisonTrayBar } from '@/components/ComparisonTrayBar';
+import { GroupPollTrayBar } from '@/components/GroupPollTrayBar';
 import { GoogleAttributionBadge } from '@/components/GoogleAttributionBadge';
 import { RestaurantCard } from '@/components/RestaurantCard';
 import {
@@ -484,6 +485,7 @@ export default function SearchScreen() {
         ) : null}
 
         <ComparisonTrayBar />
+        <GroupPollTrayBar />
 
         {/* Results Count & Free Google Maps Deep Link Fallback */}
         <View style={styles.resultsHeader}>

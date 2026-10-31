@@ -7,7 +7,9 @@ import { useQuery } from '@tanstack/react-query';
 
 import { CitySelector } from '@/components/CitySelector';
 import { ComparisonTrayBar } from '@/components/ComparisonTrayBar';
+import { CreateGroupPollModal } from '@/components/CreateGroupPollModal';
 import { EasyBillSplitterModal } from '@/components/EasyBillSplitterModal';
+import { GroupPollTrayBar } from '@/components/GroupPollTrayBar';
 import { GoogleAttributionBadge } from '@/components/GoogleAttributionBadge';
 import { KhanaSceneLogo } from '@/components/KhanaSceneLogo';
 import { RestaurantCard } from '@/components/RestaurantCard';
@@ -27,6 +29,7 @@ import { requestOnDemandUserLocation } from '@/utils/location';
 import { Radii } from '@/theme';
 
 const QUICK_FILTERS = [
+  { id: 'group-poll', label: '🗳️ Group Poll', icon: 'chatbubbles-outline' as const },
   { id: 'easy-split', label: '⚡ Easy Bill Split', icon: 'flash-outline' as const },
   { id: 'near-me', label: 'Near Me', icon: 'navigate-outline' as const },
   { id: 'card-deals', label: 'Bank Discounts', icon: 'card-outline' as const },
@@ -51,9 +54,11 @@ export default function ExploreScreen() {
   } = usePreferencesStore();
   const activeCity = INITIAL_CITIES[selectedCity];
   const [locationNotice, setLocationNotice] = useState<string | null>(null);
-  const { split } = useLocalSearchParams<{ split?: string }>();
+  const { split, poll } = useLocalSearchParams<{ split?: string; poll?: string }>();
   const [showEasySplitter, setShowEasySplitter] = useState(false);
+  const [showCreatePollModal, setShowCreatePollModal] = useState(false);
   const isSplitVisible = showEasySplitter || split === '1';
+  const isPollVisible = showCreatePollModal || poll === '1';
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['explore-sections', selectedCity],
@@ -61,6 +66,11 @@ export default function ExploreScreen() {
   });
 
   const handleQuickFilterPress = async (filterId: string) => {
+    if (filterId === 'group-poll') {
+      setShowCreatePollModal(true);
+      return;
+    }
+
     if (filterId === 'easy-split') {
       setShowEasySplitter(true);
       return;
@@ -190,6 +200,7 @@ export default function ExploreScreen() {
         </ScrollView>
 
         <ComparisonTrayBar />
+        <GroupPollTrayBar />
 
         {/* High-Energy Khana Roulette Banner */}
         <Pressable
@@ -443,6 +454,13 @@ export default function ExploreScreen() {
         <EasyBillSplitterModal
           visible={isSplitVisible}
           onClose={() => setShowEasySplitter(false)}
+        />
+      ) : null}
+
+      {isPollVisible ? (
+        <CreateGroupPollModal
+          visible={isPollVisible}
+          onClose={() => setShowCreatePollModal(false)}
         />
       ) : null}
     </SafeAreaView>

@@ -19,6 +19,7 @@ import { useComparisonStore } from '@/stores/useComparisonStore';
 import { usePreferencesStore } from '@/stores/usePreferencesStore';
 import { formatGooglePriceLevel, formatPkrRange } from '@/utils/ranking';
 import { buildGroupVoteMessage, openWhatsAppShare } from '@/utils/whatsapp';
+import { pollRepository } from '@/repositories/pollRepository';
 import { BrandColors, Radii, Spacing, Typography } from '@/theme';
 
 export default function CompareScreen() {
@@ -65,6 +66,20 @@ export default function CompareScreen() {
     setTimeout(() => setShareNotice(null), 4000);
   };
 
+  const handleLaunchLivePoll = async () => {
+    if (items.length < 2) return;
+    try {
+      const poll = await pollRepository.createPoll({
+        title: `Group Dawat (${items.map((i) => i.googleData.name).join(' vs ')})`,
+        creatorName: 'Organizer',
+        candidatePlaceIds: selectedPlaceIds,
+      });
+      router.push(`/poll/${poll.id}` as any);
+    } catch (err) {
+      console.warn('Failed to launch live poll:', err);
+    }
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.headerBox}>
@@ -104,11 +119,20 @@ export default function CompareScreen() {
             <View style={styles.pollCtaContainer}>
               <Pressable
                 accessibilityRole="button"
+                accessibilityLabel="Launch Live Voting Room"
+                onPress={handleLaunchLivePoll}
+                style={styles.livePollBtn}>
+                <Ionicons name="rocket-outline" size={18} color="#FFFFFF" />
+                <Text style={styles.livePollBtnText}>Launch Live Voting Room 🚀</Text>
+              </Pressable>
+
+              <Pressable
+                accessibilityRole="button"
                 accessibilityLabel="Share voting poll on WhatsApp"
                 onPress={handleSharePoll}
                 style={styles.pollShareBtn}>
                 <Ionicons name="logo-whatsapp" size={18} color="#25D366" />
-                <Text style={styles.pollShareBtnText}>Share Poll on WhatsApp Group 🗳️</Text>
+                <Text style={styles.pollShareBtnText}>Share WhatsApp Poll Text 🗳️</Text>
               </Pressable>
               {shareNotice ? (
                 <Text style={styles.shareNoticeText}>{shareNotice}</Text>
@@ -356,7 +380,22 @@ const styles = StyleSheet.create({
     color: BrandColors.errorRed,
   },
   pollCtaContainer: {
-    gap: 4,
+    gap: 8,
+  },
+  livePollBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+    backgroundColor: '#0E382C',
+    borderRadius: Radii.md,
+    paddingVertical: 12,
+    paddingHorizontal: Spacing.md,
+  },
+  livePollBtnText: {
+    color: '#FFFFFF',
+    fontSize: Typography.sizes.sm,
+    fontWeight: '800',
   },
   pollShareBtn: {
     flexDirection: 'row',
