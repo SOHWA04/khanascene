@@ -14,12 +14,24 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Clipboard from 'expo-clipboard';
 import { pollRepository } from '@/repositories/pollRepository';
 import { LoadingStateBlock } from '@/components/StateFeedbackBlocks';
 import { BillEstimatorModal } from '@/components/BillEstimatorModal';
 import { Radii } from '@/theme';
 
 const VOTER_NAME_STORAGE_KEY = 'khanascene.voterName.v1';
+
+export const getPollShareUrl = (pollId: string): string => {
+  const configuredBase = process.env.EXPO_PUBLIC_APP_URL?.trim();
+  if (configuredBase) {
+    return `${configuredBase.replace(/\/$/, '')}/poll/${pollId}`;
+  }
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return `${window.location.origin}/poll/${pollId}`;
+  }
+  return `http://localhost:8081/poll/${pollId}`;
+};
 
 export default function PollRoomScreen() {
   const { pollId } = useLocalSearchParams<{ pollId: string }>();
@@ -92,22 +104,19 @@ export default function PollRoomScreen() {
     if (!pollDetails) return;
     const { poll, tallies, totalVotes } = pollDetails;
 
-    let msg = `🗳️ *KhanaScene Group Poll: ${poll.title.trim()}*\n`;
-    msg += `Created by: ${poll.creatorName} (${totalVotes} votes so far)\n\n`;
+    // Use clean, standard characters to avoid emoji variation selector encoding issues in WhatsApp
+    let msg = `*KhanaScene Group Poll: ${poll.title.trim()}*\n`;
+    msg += `Organized by: ${poll.creatorName} (${totalVotes} votes cast)\n\n`;
 
     tallies.forEach((t, i) => {
-      msg += `${i + 1}️⃣ *${t.restaurant.googleData.name}* — ${t.voteCount} votes (${t.percentage}%)\n`;
+      msg += `${i + 1}. *${t.restaurant.googleData.name}* — ${t.voteCount} votes (${t.percentage}%)\n`;
       if (t.voters.length > 0) {
         msg += `   Voters: ${t.voters.join(', ')}\n`;
       }
     });
 
-    const pollUrl =
-      typeof window !== 'undefined'
-        ? window.location.href
-        : `http://localhost:8081/poll/${resolvedPollId}`;
-
-    msg += `\n👉 *Open link to vote live:*\n${pollUrl}\n\n`;
+    const pollUrl = getPollShareUrl(resolvedPollId);
+    msg += `\n*Tap to vote live here:*\n${pollUrl}\n\n`;
     msg += `_Khana kahan? Scene yahan._`;
 
     const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
@@ -117,12 +126,42 @@ export default function PollRoomScreen() {
       Linking.openURL(url);
     }
 
-    setShareNotice('WhatsApp link copied & opened! 📲');
+    setShareNotice('WhatsApp opened with clean poll message! 📲');
+    setTimeout(() => setShareNotice(null), 3500);
+  };
+
+  const handleCopyLink = async () => {
+    const pollUrl = getPollShareUrl(resolvedPollId);
+    try {
+      await Clipboard.setStringAsync(pollUrl);
+      setShareNotice('Poll link copied to clipboard! 📋');
+    } catch {
+      setShareNotice('Failed to copy link');
+    }
+    setTimeout(() => setShareNotice(null), 3500);
+  };
+
+  const handleCopyNativePollFormat = async () => {
+    if (!pollDetails) return;
+    const { poll, tallies } = pollDetails;
+    let pollText = `Question: Where should we eat? (${poll.title})\n\nOptions:\n`;
+    tallies.forEach((t, i) => {
+      pollText += `${i + 1}. ${t.restaurant.googleData.name}\n`;
+    });
+    try {
+      await Clipboard.setStringAsync(pollText);
+      setShareNotice('WhatsApp poll text copied! Paste in chat poll 🗳️');
+    } catch {
+      setShareNotice('Failed to copy poll text');
+    }
     setTimeout(() => setShareNotice(null), 3500);
   };
 
   const isClosed = pollDetails?.poll.status === 'closed';
   const winner = pollDetails?.winningCandidate ?? pollDetails?.tallies[0]?.restaurant ?? null;
+  const isLocalhost =
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
   if (isLoading) {
     return (
@@ -165,12 +204,30 @@ export default function PollRoomScreen() {
             Organized by {pollDetails.poll.creatorName} • {pollDetails.totalVotes} votes cast
           </Text>
         </View>
-        <Pressable onPress={handleShareToWhatsApp} style={styles.shareIconBtn}>
-          <Ionicons name="logo-whatsapp" size={20} color="#25D366" />
-        </Pressable>
+        <View style={styles.navActionRow}>
+          <Pressable onPress={handleCopyLink} style={styles.shareIconBtn} accessibilityLabel="Copy link">
+            <Ionicons name="copy-outline" size={18} color="#0E382C" />
+          </Pressable>
+          <Pressable onPress={handleShareToWhatsApp} style={styles.shareIconBtn} accessibilityLabel="Share to WhatsApp">
+            <Ionicons name="logo-whatsapp" size={19} color="#25D366" />
+          </Pressable>
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* Localhost Notice Banner */}
+        {isLocalhost ? (
+          <View style={styles.localhostNoticeBox}>
+            <Ionicons name="information-circle-outline" size={18} color="#0369A1" />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.localhostNoticeTitle}>Localhost Notice</Text>
+              <Text style={styles.localhostNoticeText}>
+                WhatsApp only makes real domains clickable (not localhost). For friends on other phones, run with <Text style={{ fontFamily: 'monospace', fontWeight: '700' }}>--tunnel</Text> or deploy to Vercel/Web.
+              </Text>
+            </View>
+          </View>
+        ) : null}
+
         {/* Status Banner */}
         {isClosed ? (
           <View style={styles.winnerHeroCard}>
@@ -338,11 +395,24 @@ export default function PollRoomScreen() {
         ) : null}
       </ScrollView>
 
-      {/* WhatsApp Share Sticky Footer */}
+      {/* Sticky Action Footer */}
       <View style={styles.footer}>
-        <Pressable onPress={handleShareToWhatsApp} style={styles.whatsAppShareBtn}>
-          <Ionicons name="logo-whatsapp" size={18} color="#FFFFFF" />
-          <Text style={styles.whatsAppShareBtnText}>Share Poll to WhatsApp Group</Text>
+        <View style={styles.footerBtnRow}>
+          <Pressable onPress={handleCopyLink} style={styles.copyLinkFooterBtn}>
+            <Ionicons name="copy-outline" size={16} color="#0E382C" />
+            <Text style={styles.copyLinkFooterBtnText}>Copy Link</Text>
+          </Pressable>
+          <Pressable onPress={handleShareToWhatsApp} style={styles.whatsAppShareBtn}>
+            <Ionicons name="logo-whatsapp" size={18} color="#FFFFFF" />
+            <Text style={styles.whatsAppShareBtnText}>Share to WhatsApp</Text>
+          </Pressable>
+        </View>
+
+        <Pressable onPress={handleCopyNativePollFormat} style={styles.nativePollCopyBtn}>
+          <Ionicons name="list" size={13} color="#64748B" />
+          <Text style={styles.nativePollCopyBtnText}>
+            Copy choices for WhatsApp in-chat poll
+          </Text>
         </Pressable>
       </View>
 
@@ -703,7 +773,70 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#E2E8F0',
   },
+  navActionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  footerBtnRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  copyLinkFooterBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    paddingVertical: 14,
+    borderRadius: 14,
+  },
+  copyLinkFooterBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#0E382C',
+  },
+  nativePollCopyBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 8,
+    flexDirection: 'row',
+    gap: 5,
+  },
+  nativePollCopyBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#64748B',
+    textDecorationLine: 'underline',
+  },
+  localhostNoticeBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    backgroundColor: '#F0F9FF',
+    borderWidth: 1,
+    borderColor: '#BAE6FD',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+  },
+  localhostNoticeTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#0369A1',
+    marginBottom: 2,
+  },
+  localhostNoticeText: {
+    fontSize: 11,
+    color: '#0284C7',
+    lineHeight: 16,
+  },
   whatsAppShareBtn: {
+    flex: 1.5,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
