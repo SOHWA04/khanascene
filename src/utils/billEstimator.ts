@@ -181,22 +181,63 @@ export function calculateQuickSplit(totalAmountPkr: number, splitCount: number) 
   };
 }
 
-/**
- * Formats a personalized WhatsApp nudge / reminder for a specific pending friend.
- */
-export function formatFriendNudgeWhatsAppMessage(params: {
+export type NudgeTone = 'polite' | 'meme' | 'hostel' | 'sarcastic';
+
+export interface FriendNudgeParams {
   friendName: string;
   dawatTitle: string;
   sharePkr: number;
   paymentAccountSummary?: string;
-}): string {
-  const { friendName, dawatTitle, sharePkr, paymentAccountSummary } = params;
+  phoneNumber?: string;
+  tone?: NudgeTone;
+}
+
+/**
+ * Formats a personalized WhatsApp nudge / reminder for a specific pending friend with customizable tones.
+ */
+export function formatFriendNudgeWhatsAppMessage(params: FriendNudgeParams): string {
+  const { friendName, dawatTitle, sharePkr, paymentAccountSummary, tone = 'polite' } = params;
+  const paymentSnippet =
+    paymentAccountSummary && paymentAccountSummary.trim().length > 0
+      ? `📲 *Transfer to:* ${paymentAccountSummary.trim()}\n`
+      : '';
+
+  if (tone === 'meme') {
+    let msg = `Oye ${friendName.trim()}! 💀\n`;
+    msg += `Bhai *Rs ${sharePkr.toLocaleString('en-PK')}* Easypaisa kardo warna dosti khatam samjho 😂\n`;
+    msg += `*${dawatTitle.trim()}* ka scene khatam hue zamana beet gaya aur contri abhi tak pending hai!\n\n`;
+    if (paymentSnippet) msg += paymentSnippet;
+    msg += `\nTransfer karke screenshot group me daal de shabash! 🚀\n`;
+    msg += `_Sent via KhanaScene (khanascene.pk)_`;
+    return msg;
+  }
+
+  if (tone === 'hostel') {
+    let msg = `Aray ${friendName.trim()} bhai! 🚨\n`;
+    msg += `Hostel ka budget khatam ho gaya hai aur canteen wale ne bahar rok lia hai!\n`;
+    msg += `Tumhara share: *Rs ${sharePkr.toLocaleString('en-PK')}* (*${dawatTitle.trim()}*).\n\n`;
+    if (paymentSnippet) msg += paymentSnippet;
+    msg += `\nForan bhej kar ghareeb ki jaan bacha lo! 😭🙏\n`;
+    msg += `_Sent via KhanaScene (khanascene.pk)_`;
+    return msg;
+  }
+
+  if (tone === 'sarcastic') {
+    let msg = `Wah ${friendName.trim()} sahab wah! 👑\n`;
+    msg += `Poore 2 ghante *${dawatTitle.trim()}* par feast udaya, par *Rs ${sharePkr.toLocaleString('en-PK')}* bhejte waqt internet doob gaya?\n\n`;
+    if (paymentSnippet) msg += paymentSnippet;
+    msg += `\nJaldi account me phenko taake dosti barkarar rahe! 🍕\n`;
+    msg += `_Sent via KhanaScene (khanascene.pk)_`;
+    return msg;
+  }
+
+  // Default: polite
   let msg = `Salam ${friendName.trim()}! 👋\n`;
   msg += `*KhanaScene Contri Reminder* for *${dawatTitle.trim()}*:\n\n`;
   msg += `💸 Your share: *Rs ${sharePkr.toLocaleString('en-PK')}*\n`;
 
-  if (paymentAccountSummary && paymentAccountSummary.trim().length > 0) {
-    msg += `📲 *Transfer to:* ${paymentAccountSummary.trim()}\n`;
+  if (paymentSnippet) {
+    msg += paymentSnippet;
   }
 
   msg += `\nShabash jaldi send kardo taake bill settle ho jaye! 🙏🍕\n`;
@@ -243,13 +284,7 @@ export function formatContriStatusWhatsAppMessage(params: {
  * Opens WhatsApp with a personalized friend nudge message.
  */
 export async function shareFriendNudgeOnWhatsApp(
-  params: {
-    friendName: string;
-    dawatTitle: string;
-    sharePkr: number;
-    paymentAccountSummary?: string;
-    phoneNumber?: string;
-  }
+  params: FriendNudgeParams
 ): Promise<boolean> {
   const text = formatFriendNudgeWhatsAppMessage(params);
   const phoneParam = params.phoneNumber ? `phone=${encodeURIComponent(params.phoneNumber)}&` : '';

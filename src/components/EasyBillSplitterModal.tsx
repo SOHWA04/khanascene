@@ -17,6 +17,7 @@ import {
   calculateQuickSplit,
   formatContriStatusWhatsAppMessage,
   shareFriendNudgeOnWhatsApp,
+  NudgeTone,
 } from '@/utils/billEstimator';
 import { Radii } from '@/theme';
 
@@ -74,6 +75,7 @@ export function EasyBillSplitterModal({
   const [activeSplitId, setActiveSplitId] = useState<string | null>(null);
   const [copiedNotice, setCopiedNotice] = useState(false);
   const [reminderNotice, setReminderNotice] = useState<string | null>(null);
+  const [nudgeTone, setNudgeTone] = useState<NudgeTone>('meme');
 
   useEffect(() => {
     hydrateAccounts();
@@ -178,6 +180,7 @@ export function EasyBillSplitterModal({
       dawatTitle: currentSplit?.title || dawatTitle,
       sharePkr,
       paymentAccountSummary: accountSummary,
+      tone: nudgeTone,
     });
   };
 
@@ -437,7 +440,40 @@ export function EasyBillSplitterModal({
             ) : null}
 
             {/* Section 4: Friends Tracker & WhatsApp Nudges */}
-            <Text style={styles.sectionHeading}>4. Friend Tracker & Reminders</Text>
+            <View style={styles.sectionHeadingRow}>
+              <Text style={styles.sectionHeading}>4. Friend Tracker & Reminders</Text>
+            </View>
+
+            {/* Gen Z / Student Nudge Tone Selector */}
+            <View style={styles.toneContainer}>
+              <View style={styles.toneHeaderRow}>
+                <Ionicons name="chatbubble-ellipses-outline" size={14} color="#047857" />
+                <Text style={styles.toneLabel}>WhatsApp Nudge Style:</Text>
+              </View>
+              <View style={styles.toneChipsRow}>
+                {(
+                  [
+                    { id: 'meme', label: '💀 Meme (Dosti khatam)' },
+                    { id: 'hostel', label: '🚨 Hostel SOS' },
+                    { id: 'sarcastic', label: '👑 Sarcastic' },
+                    { id: 'polite', label: '😇 Polite' },
+                  ] as const
+                ).map((t) => {
+                  const isSelected = nudgeTone === t.id;
+                  return (
+                    <Pressable
+                      key={t.id}
+                      onPress={() => setNudgeTone(t.id)}
+                      style={[styles.toneChip, isSelected && styles.toneChipActive]}>
+                      <Text style={[styles.toneChipText, isSelected && styles.toneChipTextActive]}>
+                        {t.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+
             <View style={styles.friendsCard}>
               {currentSplit?.friends.map((friend, idx) => {
                 return (
@@ -895,6 +931,57 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '800',
     color: '#FFFFFF',
+  },
+  sectionHeadingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  toneContainer: {
+    backgroundColor: '#F0FDF4',
+    borderRadius: 12,
+    padding: 10,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
+  },
+  toneHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 6,
+  },
+  toneLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#065F46',
+  },
+  toneChipsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  toneChip: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: Radii.pill,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+  },
+  toneChipActive: {
+    backgroundColor: '#047857',
+    borderColor: '#047857',
+  },
+  toneChipText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#334155',
+  },
+  toneChipTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '800',
   },
   friendsCard: {
     backgroundColor: '#F8FAFC',

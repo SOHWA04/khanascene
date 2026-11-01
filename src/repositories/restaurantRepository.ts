@@ -225,6 +225,85 @@ export function filterAndSortRestaurants(
       }
     }
 
+    if (filters.campusId) {
+      const campusAreaMap: Record<string, string[]> = {
+        nust: ['isb-nust', 'isb-f11', 'isb-f10'],
+        fast: ['isb-fast', 'isb-i8', 'isb-f8'],
+        comsats: ['isb-comsats', 'isb-i8'],
+        'bahria-air': ['isb-bahria-air', 'isb-f8', 'isb-f6', 'isb-f7'],
+        'pindi-campus': ['rwp-commercial-campus', 'rwp-commercial', 'rwp-saddar'],
+      };
+      const validAreas = campusAreaMap[filters.campusId] || [filters.campusId];
+      const area = item.khanaSceneData?.areaId;
+      if (area && !validAreas.includes(area)) {
+        return false;
+      }
+    }
+
+    if (filters.vibe) {
+      const recordVibes = item.khanaSceneData?.vibes ?? [];
+      if (recordVibes.includes(filters.vibe)) {
+        // Explicitly tagged
+      } else {
+        const cuisines = (item.khanaSceneData?.cuisines ?? []).map((c) => c.toLowerCase());
+        const primaryCat = (item.googleData.primaryCategory ?? '').toLowerCase();
+        const priceMax = item.khanaSceneData?.priceMaxPkr ?? 1200;
+        const rating = item.googleData.googleRating ?? 4.0;
+        const hood = item.googleData.neighbourhood?.toLowerCase() ?? '';
+
+        switch (filters.vibe) {
+          case 'broke':
+            if (
+              item.googleData.priceLevel !== 'PRICE_LEVEL_INEXPENSIVE' &&
+              priceMax > 800 &&
+              !cuisines.some((c) => ['biryani', 'fast-food', 'pizza', 'street-food'].includes(c))
+            ) {
+              return false;
+            }
+            break;
+          case 'insta':
+            if (
+              !cuisines.some((c) => ['cafes', 'desserts', 'italian'].includes(c)) &&
+              !hood.includes('f-6') &&
+              !hood.includes('f-7') &&
+              !primaryCat.includes('cafe')
+            ) {
+              return false;
+            }
+            break;
+          case 'latenight':
+            if (
+              item.googleData.openNow !== true &&
+              !cuisines.some((c) => ['chai', 'karahi', 'burgers', 'bbq'].includes(c))
+            ) {
+              return false;
+            }
+            break;
+          case 'study':
+            if (!cuisines.includes('cafes') && !primaryCat.includes('cafe') && !primaryCat.includes('coffee')) {
+              return false;
+            }
+            break;
+          case 'car':
+            if (
+              !cuisines.some((c) => ['fast-food', 'burgers', 'bbq', 'street-food'].includes(c)) &&
+              !hood.includes('i-8') &&
+              !hood.includes('f-10')
+            ) {
+              return false;
+            }
+            break;
+          case 'date':
+            if (rating < 4.2 || cuisines.includes('street-food')) {
+              return false;
+            }
+            break;
+          default:
+            break;
+        }
+      }
+    }
+
     if (normalizedQuery.length > 0) {
       const searchableChunks = [
         item.googleData.name,

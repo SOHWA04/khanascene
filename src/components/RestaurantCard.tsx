@@ -9,7 +9,7 @@ import { useSavedStore } from '@/stores/useSavedStore';
 import { usePollStore } from '@/stores/usePollStore';
 import { RestaurantDiscoveryItem } from '@/types/restaurant';
 import { formatGooglePriceLevel, formatPkrRange } from '@/utils/ranking';
-import { BrandColors, Radii } from '@/theme';
+import { BrandColors, Radii, VIBE_DEFINITIONS } from '@/theme';
 
 interface RestaurantCardProps {
   item: RestaurantDiscoveryItem;
@@ -25,6 +25,10 @@ export function RestaurantCard({ item, distanceKm }: RestaurantCardProps) {
   const inComparison = selectedPlaceIds.includes(item.placeId);
   const { isCandidateSelected, toggleCandidate } = usePollStore();
   const inPoll = isCandidateSelected(item.placeId);
+
+  const vibe = khanaSceneData?.vibes?.[0]
+    ? VIBE_DEFINITIONS.find((v) => v.id === khanaSceneData?.vibes?.[0])
+    : null;
 
   const hasPkrPrice =
     khanaSceneData?.priceMinPkr != null || khanaSceneData?.priceMaxPkr != null;
@@ -72,6 +76,13 @@ export function RestaurantCard({ item, distanceKm }: RestaurantCardProps) {
           </View>
           <View style={styles.headerMeta}>
             <View style={styles.badgesRow}>
+              {vibe ? (
+                <View style={[styles.vibeBadge, { backgroundColor: vibe.bgColor }]}>
+                  <Text style={[styles.vibeBadgeText, { color: vibe.color }]}>
+                    {vibe.badge}
+                  </Text>
+                </View>
+              ) : null}
               {khanaSceneData?.isKhanaScenePick ? (
                 <View style={styles.pickBadge}>
                   <Ionicons name="sparkles" size={11} color="#B45309" />
@@ -328,6 +339,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexWrap: 'wrap',
     gap: 6,
+  },
+  vibeBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: Radii.pill,
+  },
+  vibeBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
   },
   pickBadge: {
     flexDirection: 'row',

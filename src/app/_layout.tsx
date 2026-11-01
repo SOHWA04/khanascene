@@ -58,6 +58,18 @@ export default function RootLayout() {
           }}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen
+            name="match"
+            options={{ title: 'Khana Match 🔥', headerBackTitle: 'Back' }}
+          />
+          <Stack.Screen
+            name="roulette"
+            options={{ title: 'Khana Roulette 🎲', headerBackTitle: 'Back' }}
+          />
+          <Stack.Screen
+            name="poll/[pollId]"
+            options={{ title: 'Live Group Poll 🗳️', headerBackTitle: 'Back' }}
+          />
+          <Stack.Screen
             name="restaurant/[placeId]"
             options={{ title: 'Restaurant Details', headerBackTitle: 'Back' }}
           />

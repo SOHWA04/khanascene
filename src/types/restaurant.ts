@@ -194,6 +194,7 @@ export interface KhanaSceneRecord {
   parkingType?: ParkingType;
   hasValet?: boolean;
   heroDishes?: string[];
+  vibes?: string[];
 }
 
 /**
@@ -227,5 +228,7 @@ export interface SearchFilters {
   valetOnly?: boolean;
   hasCardDealsOnly?: boolean;
   cardDealBank?: string | null;
+  vibe?: string | null;
+  campusId?: string | null;
   sortBy: SortOption;
 }

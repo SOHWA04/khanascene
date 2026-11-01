@@ -10,6 +10,7 @@ export const BrandColors = {
   deepForestGreen: '#0E382C',
   primaryGreen: '#126149',
   emeraldGlow: '#10B981',
+  neonEmerald: '#00F59B',
   warmCream: '#F8F9FA',
   canvasBg: '#F8F9FA',
   white: '#FFFFFF',
@@ -27,7 +28,76 @@ export const BrandColors = {
   warningAmber: '#D97706',
   warningBackground: '#FEF3C7',
   googleBlue: '#2563EB',
+  cyberPink: '#EC4899',
+  partyPurple: '#8B5CF6',
+  darkCanvas: '#0A0F0D',
+  cardDark: '#161F1A',
 } as const;
+
+export const VIBE_DEFINITIONS = [
+  {
+    id: 'broke',
+    label: 'Broke Mode (< Rs.600)',
+    shortLabel: '💸 Broke Mode',
+    badge: '💸 Broke Approved',
+    icon: 'wallet-outline' as const,
+    color: '#059669',
+    bgColor: '#ECFDF5',
+    description: 'Student-budget friendly feeds under Rs. 600/person',
+  },
+  {
+    id: 'insta',
+    label: 'Insta Photo Dump',
+    shortLabel: '📸 Insta Vibe',
+    badge: '📸 Insta Aesthetic',
+    icon: 'camera-outline' as const,
+    color: '#DB2777',
+    bgColor: '#FCE7F3',
+    description: 'Aesthetic interiors, latte art, and photo-dump lighting',
+  },
+  {
+    id: 'latenight',
+    label: 'Late Night 2 AM Chai',
+    shortLabel: '🌙 2 AM Chai',
+    badge: '🌙 2 AM Scene',
+    icon: 'moon-outline' as const,
+    color: '#D97706',
+    bgColor: '#FEF3C7',
+    description: 'Open past 1 AM for paratha roll runs & chai bakar',
+  },
+  {
+    id: 'study',
+    label: 'Laptop & Study',
+    shortLabel: '💻 Study Friendly',
+    badge: '💻 Study Hub',
+    icon: 'laptop-outline' as const,
+    color: '#2563EB',
+    bgColor: '#EFF6FF',
+    description: 'Quiet atmosphere, power sockets & reliable WiFi',
+  },
+  {
+    id: 'car',
+    label: 'Car Scene / Diggi',
+    shortLabel: '🚗 Car Dining',
+    badge: '🚗 Diggi Baithak',
+    icon: 'car-sport-outline' as const,
+    color: '#7C3AED',
+    bgColor: '#F5F3FF',
+    description: 'Boot dining & tea served straight to your window',
+  },
+  {
+    id: 'date',
+    label: 'First Date / Safe Bet',
+    shortLabel: '🕯️ Date Safe',
+    badge: '🕯️ Date Safe',
+    icon: 'heart-outline' as const,
+    color: '#E11D48',
+    bgColor: '#FFE4E6',
+    description: 'Cozy mood lighting, great acoustics & foolproof food',
+  },
+] as const;
+
+export type VibeId = (typeof VIBE_DEFINITIONS)[number]['id'];
 
 export const Colors = {
   light: {

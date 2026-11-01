@@ -33,7 +33,7 @@ import { buildFreeGoogleMapsSearchUrl } from '@/services/google-places/placesSer
 import { usePreferencesStore } from '@/stores/usePreferencesStore';
 import { SearchFilters, SortOption } from '@/types/restaurant';
 import { requestOnDemandUserLocation } from '@/utils/location';
-import { BrandColors, Radii, Spacing, Typography } from '@/theme';
+import { BrandColors, Radii, Spacing, Typography, VIBE_DEFINITIONS } from '@/theme';
 
 const SORT_OPTIONS: { id: SortOption; label: string }[] = [
   { id: 'relevance', label: 'Relevance' },
@@ -71,11 +71,16 @@ export default function SearchScreen() {
             ? 'cafes'
             : null);
 
+  const initialVibe =
+    (params as any).vibe ??
+    (params.filter?.startsWith('vibe-') ? params.filter.replace('vibe-', '') : null);
+
   const [rawQuery, setRawQuery] = useState(params.q ?? '');
   const [debouncedQuery, setDebouncedQuery] = useState(params.q ?? '');
   const [selectedCuisine, setSelectedCuisine] = useState<string | null>(
     initialFilterCuisine
   );
+  const [selectedVibe, setSelectedVibe] = useState<string | null>(initialVibe);
   const [minRating, setMinRating] = useState<number | null>(
     params.filter === 'rating-4' ? 4.0 : null
   );
@@ -96,9 +101,9 @@ export default function SearchScreen() {
   const [locationMessage, setLocationMessage] = useState<string | null>(null);
 
   const [prevParamsKey, setPrevParamsKey] = useState(
-    `${params.q ?? ''}|${params.filter ?? ''}|${params.cuisine ?? ''}`
+    `${params.q ?? ''}|${params.filter ?? ''}|${params.cuisine ?? ''}|${(params as any).vibe ?? ''}`
   );
-  const currentParamsKey = `${params.q ?? ''}|${params.filter ?? ''}|${params.cuisine ?? ''}`;
+  const currentParamsKey = `${params.q ?? ''}|${params.filter ?? ''}|${params.cuisine ?? ''}|${(params as any).vibe ?? ''}`;
 
   if (currentParamsKey !== prevParamsKey) {
     setPrevParamsKey(currentParamsKey);
@@ -109,7 +114,11 @@ export default function SearchScreen() {
     if (params.cuisine !== undefined) {
       setSelectedCuisine(params.cuisine);
     }
+    if ((params as any).vibe !== undefined) {
+      setSelectedVibe((params as any).vibe);
+    }
     if (params.filter) {
+      if (params.filter.startsWith('vibe-')) setSelectedVibe(params.filter.replace('vibe-', ''));
       if (params.filter === 'open-now') setOpenNowOnly(true);
       if (params.filter === 'rating-4') setMinRating(4.0);
       if (params.filter === 'budget') setBudgetOnly(true);
@@ -153,6 +162,7 @@ export default function SearchScreen() {
       hasCardDealsOnly,
       cardDealBank: selectedBank !== 'all' ? selectedBank : null,
       nearMeOnly: sortBy === 'nearest',
+      vibe: selectedVibe,
       sortBy,
     }),
     [
@@ -168,6 +178,7 @@ export default function SearchScreen() {
       valetOnly,
       hasCardDealsOnly,
       selectedBank,
+      selectedVibe,
       sortBy,
     ]
   );
@@ -281,6 +292,40 @@ export default function SearchScreen() {
                   style={[styles.chip, active && styles.chipActive]}>
                   <Text style={[styles.chipText, active && styles.chipTextActive]}>
                     {area.name}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
+
+        {/* Gen Z / Student Vibe Check Filter */}
+        <View style={styles.filterGroup}>
+          <Text style={styles.filterGroupLabel}>Vibe Check (Students & Gen Z)</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.chipRow}>
+            <Pressable
+              onPress={() => setSelectedVibe(null)}
+              style={[styles.chip, selectedVibe === null && styles.chipActive]}>
+              <Text
+                style={[
+                  styles.chipText,
+                  selectedVibe === null && styles.chipTextActive,
+                ]}>
+                ✨ All Vibes
+              </Text>
+            </Pressable>
+            {VIBE_DEFINITIONS.map((v) => {
+              const active = selectedVibe === v.id;
+              return (
+                <Pressable
+                  key={v.id}
+                  onPress={() => setSelectedVibe(active ? null : v.id)}
+                  style={[styles.chip, active && styles.chipActive]}>
+                  <Text style={[styles.chipText, active && styles.chipTextActive]}>
+                    {v.label}
                   </Text>
                 </Pressable>
               );

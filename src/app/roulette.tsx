@@ -23,8 +23,21 @@ import { INITIAL_CITIES } from '@/config';
 import { restaurantRepository } from '@/repositories/restaurantRepository';
 import { usePreferencesStore } from '@/stores/usePreferencesStore';
 import { RestaurantDiscoveryItem } from '@/types/restaurant';
-import { buildRoulettePickMessage, openWhatsAppShare } from '@/utils/whatsapp';
+import {
+  buildRoulettePickMessage,
+  buildStorySceneShareMessage,
+  openWhatsAppShare,
+} from '@/utils/whatsapp';
 import { BrandColors, Radii, Spacing, Typography } from '@/theme';
+
+const ROULETTE_PARTY_STARES = [
+  { id: 'chai', label: '☕ Loser buys the chai / karak tea', shortLabel: '☕ Chai Dare' },
+  { id: 'drive', label: '🚗 Spinner or organizer drives tonight', shortLabel: '🚗 Driver Dare' },
+  { id: 'dessert', label: '🍨 Loser treats everyone to sweet dish', shortLabel: '🍨 Dessert Dare' },
+  { id: 'photo', label: '📸 Quietest friend takes group photo dump', shortLabel: '📸 Photo Duty' },
+  { id: 'tip', label: '🗣️ First to complain pays the tip', shortLabel: '🗣️ Tip Dare' },
+  { id: 'none', label: 'No Dare (Just Food)', shortLabel: 'No Dare' },
+] as const;
 
 export default function KhanaRouletteScreen() {
   const { selectedCity, selectedAreaId, setArea } = usePreferencesStore();
@@ -35,6 +48,7 @@ export default function KhanaRouletteScreen() {
   const [cardDealsOnly, setCardDealsOnly] = useState(false);
   const [familyOnly, setFamilyOnly] = useState(false);
   const [openNowOnly, setOpenNowOnly] = useState(false);
+  const [selectedDareId, setSelectedDareId] = useState<string>('chai');
 
   // Animation & Selection state
   const [selectedResult, setSelectedResult] = useState<RestaurantDiscoveryItem | null>(null);
@@ -131,6 +145,9 @@ export default function KhanaRouletteScreen() {
         ? `${selectedResult.khanaSceneData.cardDeals[0].bankName} ${selectedResult.khanaSceneData.cardDeals[0].discountPercentage}% Off`
         : null;
 
+    const activeDare = ROULETTE_PARTY_STARES.find((s) => s.id === selectedDareId);
+    const dareText = activeDare && activeDare.id !== 'none' ? activeDare.label : undefined;
+
     const msg = buildRoulettePickMessage({
       name: selectedResult.googleData.name,
       neighbourhood: selectedResult.googleData.neighbourhood,
@@ -139,6 +156,7 @@ export default function KhanaRouletteScreen() {
       cardDealSummary: cardSummary,
       hasValet: selectedResult.khanaSceneData?.hasValet,
       mapsUrl: selectedResult.googleData.googleMapsUri,
+      dare: dareText,
     });
 
     const sent = await openWhatsAppShare(msg);
@@ -146,6 +164,31 @@ export default function KhanaRouletteScreen() {
       setShareFeedback('WhatsApp opened! Send to your friends or group.');
     } else {
       setShareFeedback('Could not open WhatsApp. Please check if installed.');
+    }
+    setTimeout(() => setShareFeedback(null), 4000);
+  };
+
+  const handleShareStoryCard = async () => {
+    if (!selectedResult) return;
+
+    const activeDare = ROULETTE_PARTY_STARES.find((s) => s.id === selectedDareId);
+    const dareText = activeDare && activeDare.id !== 'none' ? activeDare.label : undefined;
+
+    const msg = buildStorySceneShareMessage({
+      restaurantName: selectedResult.googleData.name,
+      neighbourhood: selectedResult.googleData.neighbourhood,
+      vibeText: selectedResult.khanaSceneData?.vibes?.[0]
+        ? `${selectedResult.khanaSceneData.vibes[0].toUpperCase()} SCENE 🔥`
+        : 'Khana Roulette Decision 🎲',
+      heroDish: selectedResult.khanaSceneData?.heroDishes?.[0],
+      dare: dareText,
+    });
+
+    const sent = await openWhatsAppShare(msg);
+    if (sent) {
+      setShareFeedback('Story Card opened in WhatsApp! Ready for status or groups 📸');
+    } else {
+      setShareFeedback('Could not open WhatsApp.');
     }
     setTimeout(() => setShareFeedback(null), 4000);
   };
@@ -259,6 +302,32 @@ export default function KhanaRouletteScreen() {
           </View>
         </View>
 
+        {/* Party Stakes & Dares Selector */}
+        <View style={styles.dareSection}>
+          <View style={styles.dareHeaderRow}>
+            <Ionicons name="flame" size={16} color="#D97706" />
+            <Text style={styles.dareSectionTitle}>Party Stakes & Dares (Optional)</Text>
+          </View>
+          <Text style={styles.dareSectionSubtitle}>
+            Spice up group dining: spin decides the food, wheel decides the dare!
+          </Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.dareRow}>
+            {ROULETTE_PARTY_STARES.map((s) => {
+              const isSelected = selectedDareId === s.id;
+              return (
+                <Pressable
+                  key={s.id}
+                  onPress={() => setSelectedDareId(s.id)}
+                  style={[styles.dareChip, isSelected && styles.dareChipActive]}>
+                  <Text style={[styles.dareChipText, isSelected && styles.dareChipTextActive]}>
+                    {s.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
+
         {isLoading ? (
           <LoadingStateBlock label="Loading restaurants for roulette..." />
         ) : isError ? (
@@ -368,6 +437,19 @@ export default function KhanaRouletteScreen() {
                   </View>
                 )}
 
+                {/* Party Dare Banner */}
+                {selectedDareId !== 'none' && (
+                  <View style={styles.winnerDareBox}>
+                    <Ionicons name="flame" size={18} color="#EF4444" />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.winnerDareTitle}>🔥 GROUP STAKE / DARE:</Text>
+                      <Text style={styles.winnerDareText}>
+                        {ROULETTE_PARTY_STARES.find((s) => s.id === selectedDareId)?.label}
+                      </Text>
+                    </View>
+                  </View>
+                )}
+
                 {/* Action Buttons */}
                 <View style={styles.actionButtonsCol}>
                   <Pressable
@@ -391,6 +473,15 @@ export default function KhanaRouletteScreen() {
                     style={styles.shareWhatsAppBtn}>
                     <Ionicons name="logo-whatsapp" size={18} color="#25D366" />
                     <Text style={styles.shareWhatsAppBtnText}>Share Pick with Friends</Text>
+                  </Pressable>
+
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Share WhatsApp or Instagram story card"
+                    onPress={handleShareStoryCard}
+                    style={styles.shareStoryBtn}>
+                    <Ionicons name="camera-outline" size={18} color="#0E382C" />
+                    <Text style={styles.shareStoryBtnText}>Share Story Card 📸</Text>
                   </Pressable>
                 </View>
 
@@ -686,5 +777,89 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.xs,
     color: BrandColors.primaryGreen,
     textAlign: 'center',
+  },
+  dareSection: {
+    backgroundColor: '#FFFBEB',
+    borderRadius: Radii.lg,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    gap: Spacing.xs,
+  },
+  dareHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  dareSectionTitle: {
+    fontSize: Typography.sizes.sm,
+    fontWeight: '800',
+    color: '#92400E',
+  },
+  dareSectionSubtitle: {
+    fontSize: Typography.sizes.xs,
+    color: '#B45309',
+    marginBottom: Spacing.xs,
+  },
+  dareRow: {
+    gap: Spacing.xs,
+  },
+  dareChip: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 6,
+    borderRadius: Radii.pill,
+    backgroundColor: BrandColors.white,
+    borderWidth: 1,
+    borderColor: '#FCD34D',
+  },
+  dareChipActive: {
+    backgroundColor: '#D97706',
+    borderColor: '#D97706',
+  },
+  dareChipText: {
+    fontSize: Typography.sizes.xs,
+    fontWeight: '600',
+    color: '#78350F',
+  },
+  dareChipTextActive: {
+    color: BrandColors.white,
+    fontWeight: '800',
+  },
+  winnerDareBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    backgroundColor: '#FEF2F2',
+    padding: Spacing.sm,
+    borderRadius: Radii.md,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+  },
+  winnerDareTitle: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#DC2626',
+    letterSpacing: 0.5,
+  },
+  winnerDareText: {
+    fontSize: Typography.sizes.xs,
+    fontWeight: '700',
+    color: '#991B1B',
+  },
+  shareStoryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    paddingVertical: Spacing.md,
+    borderRadius: Radii.md,
+  },
+  shareStoryBtnText: {
+    color: BrandColors.deepForestGreen,
+    fontSize: Typography.sizes.sm,
+    fontWeight: '700',
   },
 });

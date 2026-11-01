@@ -29,17 +29,18 @@ import { requestOnDemandUserLocation } from '@/utils/location';
 import { Radii } from '@/theme';
 
 const QUICK_FILTERS = [
+  { id: 'khana-match', label: '🔥 Khana Match', icon: 'flame' as const },
   { id: 'group-poll', label: '🗳️ Group Poll', icon: 'chatbubbles-outline' as const },
   { id: 'easy-split', label: '⚡ Easy Bill Split', icon: 'flash-outline' as const },
+  { id: 'vibe-broke', label: '💸 Broke Mode (< Rs.600)', icon: 'wallet-outline' as const },
+  { id: 'vibe-latenight', label: '🌙 2 AM Chai Scene', icon: 'moon-outline' as const },
+  { id: 'vibe-insta', label: '📸 Insta Photo Dump', icon: 'camera-outline' as const },
+  { id: 'vibe-study', label: '💻 Laptop & Study', icon: 'laptop-outline' as const },
+  { id: 'vibe-car', label: '🚗 Car Boot Dining', icon: 'car-sport-outline' as const },
+  { id: 'vibe-date', label: '🕯️ First Date Safe', icon: 'heart-outline' as const },
+  { id: 'card-deals', label: '🏷️ Bank Discounts', icon: 'card-outline' as const },
   { id: 'near-me', label: 'Near Me', icon: 'navigate-outline' as const },
-  { id: 'card-deals', label: 'Bank Discounts', icon: 'card-outline' as const },
   { id: 'open-now', label: 'Open Now', icon: 'time-outline' as const },
-  { id: 'rating-4', label: 'Rating 4.0+', icon: 'star-outline' as const },
-  { id: 'budget', label: 'Budget Friendly', icon: 'wallet-outline' as const },
-  { id: 'family', label: 'Family Friendly', icon: 'people-outline' as const },
-  { id: 'valet', label: 'Valet Parking', icon: 'car-outline' as const },
-  { id: 'pakistani', label: 'Pakistani', icon: 'restaurant-outline' as const },
-  { id: 'bbq', label: 'BBQ', icon: 'flame-outline' as const },
   { id: 'burgers', label: 'Burgers', icon: 'fast-food-outline' as const },
   { id: 'cafes', label: 'Cafés', icon: 'cafe-outline' as const },
 ];
@@ -66,6 +67,11 @@ export default function ExploreScreen() {
   });
 
   const handleQuickFilterPress = async (filterId: string) => {
+    if (filterId === 'khana-match') {
+      router.push('/match' as any);
+      return;
+    }
+
     if (filterId === 'group-poll') {
       setShowCreatePollModal(true);
       return;
@@ -201,6 +207,28 @@ export default function ExploreScreen() {
 
         <ComparisonTrayBar />
         <GroupPollTrayBar />
+
+        {/* High-Energy Khana Match Swiper Banner */}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Launch Khana Match Swiper"
+          onPress={() => router.push('/match' as any)}
+          style={styles.matchBanner}>
+          <View style={styles.matchBannerLeft}>
+            <View style={styles.matchBannerBadge}>
+              <Ionicons name="flame" size={12} color="#FFFFFF" />
+              <Text style={styles.matchBannerBadgeText}>CAMPUS & GEN Z FAVORITE</Text>
+            </View>
+            <Text style={styles.matchBannerTitle}>Khana Match: Swipe on Cravings 🔥</Text>
+            <Text style={styles.matchBannerSubtitle}>
+              Can&apos;t agree? Swipe right on spots & lock in tonight&apos;s scene in 30 seconds!
+            </Text>
+          </View>
+          <View style={styles.matchBannerAction}>
+            <Text style={styles.matchBannerBtnText}>Swipe Now</Text>
+            <Ionicons name="arrow-forward" size={16} color="#0A0F0D" />
+          </View>
+        </Pressable>
 
         {/* High-Energy Khana Roulette Banner */}
         <Pressable
@@ -598,6 +626,74 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: '#0E382C',
+  },
+  matchBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#0A0F0D',
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1.5,
+    borderColor: '#00F59B',
+    ...Platform.select({
+      web: {
+        boxShadow: '0 6px 24px rgba(0, 245, 155, 0.2)',
+      },
+      default: {
+        elevation: 5,
+        shadowColor: '#00F59B',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 10,
+      },
+    }),
+  },
+  matchBannerLeft: {
+    flex: 1,
+    gap: 4,
+    paddingRight: 10,
+  },
+  matchBannerBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    alignSelf: 'flex-start',
+    backgroundColor: '#EF4444',
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    borderRadius: Radii.pill,
+  },
+  matchBannerBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  matchBannerTitle: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: -0.2,
+  },
+  matchBannerSubtitle: {
+    color: '#94A3B8',
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  matchBannerAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#00F59B',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: Radii.pill,
+  },
+  matchBannerBtnText: {
+    color: '#0A0F0D',
+    fontSize: 12,
+    fontWeight: '800',
   },
   rouletteBanner: {
     flexDirection: 'row',

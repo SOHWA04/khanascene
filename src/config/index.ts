@@ -32,6 +32,10 @@ export const INITIAL_CITIES: Record<CitySlug, CityConfig> = {
       { id: 'isb-i8', cityId: 'islamabad', name: 'I-8 Markaz', isActive: true },
       { id: 'isb-e7', cityId: 'islamabad', name: 'E-7', isActive: true },
       { id: 'isb-daman-e-koh', cityId: 'islamabad', name: 'Margalla Hills', isActive: true },
+      { id: 'isb-nust', cityId: 'islamabad', name: '🎓 NUST (H-12/H-13)', isActive: true },
+      { id: 'isb-fast', cityId: 'islamabad', name: '🎓 FAST (H-9/I-9)', isActive: true },
+      { id: 'isb-comsats', cityId: 'islamabad', name: '🎓 COMSATS (Park Rd)', isActive: true },
+      { id: 'isb-bahria-air', cityId: 'islamabad', name: '🎓 Bahria & Air (E-8/E-9)', isActive: true },
     ],
   },
   rawalpindi: {
@@ -50,9 +54,63 @@ export const INITIAL_CITIES: Record<CitySlug, CityConfig> = {
       { id: 'rwp-commercial', cityId: 'rawalpindi', name: 'Commercial Market', isActive: true },
       { id: 'rwp-peshawar-rd', cityId: 'rawalpindi', name: 'Peshawar Road', isActive: true },
       { id: 'rwp-chaklala', cityId: 'rawalpindi', name: 'Chaklala Scheme 3', isActive: true },
+      { id: 'rwp-commercial-campus', cityId: 'rawalpindi', name: '🎓 Commercial Market Hub', isActive: true },
+      { id: 'rwp-ayub-park', cityId: 'rawalpindi', name: '🌳 Ayub Park Hub', isActive: true },
     ],
   },
 };
+
+export interface CampusHub {
+  id: string;
+  name: string;
+  shortName: string;
+  cityId: CitySlug;
+  areaId: string;
+  popularSpotsHint: string;
+}
+
+export const CAMPUS_HUBS: CampusHub[] = [
+  {
+    id: 'nust',
+    name: 'NUST Islamabad',
+    shortName: 'NUST (H-12)',
+    cityId: 'islamabad',
+    areaId: 'isb-nust',
+    popularSpotsHint: 'H-13 Gates, C1/C2 & G-11 late runs',
+  },
+  {
+    id: 'fast',
+    name: 'FAST NUCES',
+    shortName: 'FAST (H-9)',
+    cityId: 'islamabad',
+    areaId: 'isb-fast',
+    popularSpotsHint: 'I-8 Markaz & I-9 student chai spots',
+  },
+  {
+    id: 'comsats',
+    name: 'COMSATS University',
+    shortName: 'COMSATS',
+    cityId: 'islamabad',
+    areaId: 'isb-comsats',
+    popularSpotsHint: 'Park Road shawarmas & Chak Shahzad',
+  },
+  {
+    id: 'bahria-air',
+    name: 'Bahria & Air University',
+    shortName: 'Bahria / Air',
+    cityId: 'islamabad',
+    areaId: 'isb-bahria-air',
+    popularSpotsHint: 'F-8 & Beverly Center hangs',
+  },
+  {
+    id: 'pindi-campus',
+    name: 'Rawalpindi Student Hub',
+    shortName: 'Commercial Mkt',
+    cityId: 'rawalpindi',
+    areaId: 'rwp-commercial-campus',
+    popularSpotsHint: 'Commercial Market rolls & chaat',
+  },
+];
 
 export const CUISINE_CATEGORIES: CuisineCategory[] = [
   { id: 'pakistani', name: 'Pakistani', slug: 'pakistani', iconName: 'restaurant-outline', searchQuery: 'Pakistani restaurants', isActive: true },

@@ -159,6 +159,7 @@ export interface RoulettePickDetails {
   cardDealSummary?: string | null;
   hasValet?: boolean | null;
   mapsUrl?: string | null;
+  dare?: string | null;
 }
 
 /**
@@ -185,6 +186,9 @@ export function buildRoulettePickMessage(pick: RoulettePickDetails): string {
   if (pick.hasValet) {
     msg += `• *Parking:* Valet Available 🚗\n`;
   }
+  if (pick.dare && pick.dare.trim().length > 0) {
+    msg += `• 🔥 *GROUP DARE / STAKE:* ${pick.dare.trim()}\n`;
+  }
   if (pick.mapsUrl) {
     msg += `\nDirections: ${pick.mapsUrl}\n`;
   }
@@ -192,6 +196,56 @@ export function buildRoulettePickMessage(pick: RoulettePickDetails): string {
   msg += `\nKoi objection ya chalen? 🚗💨\n`;
   msg += `_Spun on KhanaScene (khanascene.pk)_`;
 
+  return msg;
+}
+
+export interface StorySceneShareParams {
+  restaurantName: string;
+  neighbourhood?: string | null;
+  vibeText?: string | null;
+  heroDish?: string | null;
+  organizerOrFriends?: string | null;
+  dare?: string | null;
+  appUrl?: string;
+}
+
+/**
+ * Builds an aesthetic WhatsApp Status / Instagram Story caption card.
+ */
+export function buildStorySceneShareMessage(params: StorySceneShareParams): string {
+  const {
+    restaurantName,
+    neighbourhood,
+    vibeText = 'Student Scene 🔥',
+    heroDish,
+    organizerOrFriends,
+    dare,
+    appUrl = 'https://khanascene.netlify.app',
+  } = params;
+
+  const cleanVibe = vibeText?.trim() || 'Student Scene 🔥';
+  let msg = `✨ 𝗧𝗢𝗡𝗜𝗚𝗛𝗧'𝗦 𝗦𝗖𝗘𝗡𝗘 ✨\n`;
+  msg += `━━━━━━━━━━━━━━━━━━━━\n`;
+  msg += `📍 *${restaurantName.trim()}*`;
+  if (neighbourhood) {
+    msg += ` (${neighbourhood.trim()})`;
+  }
+  msg += `\n`;
+  msg += `🏷️ *Vibe:* ${cleanVibe}\n`;
+
+  if (heroDish) {
+    msg += `🍔 *Must Try:* ${heroDish.trim()}\n`;
+  }
+  if (organizerOrFriends) {
+    msg += `👥 *Crew:* ${organizerOrFriends.trim()}\n`;
+  }
+  if (dare && dare.trim().length > 0) {
+    msg += `🎯 *Group Dare:* ${dare.trim()}\n`;
+  }
+
+  msg += `━━━━━━━━━━━━━━━━━━━━\n`;
+  msg += `Decided via KhanaScene: ${appUrl}\n`;
+  msg += `_Khana kahan? Scene yahan._`;
   return msg;
 }
 

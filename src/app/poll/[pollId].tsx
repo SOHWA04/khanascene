@@ -18,6 +18,7 @@ import * as Clipboard from 'expo-clipboard';
 import { pollRepository } from '@/repositories/pollRepository';
 import { LoadingStateBlock } from '@/components/StateFeedbackBlocks';
 import { BillEstimatorModal } from '@/components/BillEstimatorModal';
+import { buildStorySceneShareMessage, openWhatsAppShare } from '@/utils/whatsapp';
 import { Radii } from '@/theme';
 
 const VOTER_NAME_STORAGE_KEY = 'khanascene.voterName.v1';
@@ -157,6 +158,26 @@ export default function PollRoomScreen() {
     setTimeout(() => setShareNotice(null), 3500);
   };
 
+  const handleShareStoryCard = async () => {
+    if (!pollDetails || !winner) return;
+    const voterNames = pollDetails.tallies.flatMap((t) => t.voters).slice(0, 4);
+    const msg = buildStorySceneShareMessage({
+      restaurantName: winner.googleData.name,
+      neighbourhood: winner.googleData.neighbourhood,
+      vibeText: `${pollDetails.poll.title} (Winner 🏆)`,
+      heroDish: winner.khanaSceneData?.heroDishes?.[0],
+      organizerOrFriends: voterNames.length > 0 ? voterNames.join(', ') : pollDetails.poll.creatorName,
+      appUrl: getPollShareUrl(resolvedPollId),
+    });
+    const sent = await openWhatsAppShare(msg);
+    if (sent) {
+      setShareNotice('Story Card opened in WhatsApp! Ready for status 📸');
+    } else {
+      setShareNotice('Could not open WhatsApp');
+    }
+    setTimeout(() => setShareNotice(null), 3500);
+  };
+
   const isClosed = pollDetails?.poll.status === 'closed';
   const winner = pollDetails?.winningCandidate ?? pollDetails?.tallies[0]?.restaurant ?? null;
   const isLocalhost =
@@ -258,6 +279,13 @@ export default function PollRoomScreen() {
                 style={styles.winnerActionBtnPrimary}>
                 <Ionicons name="calculator-outline" size={15} color="#FFFFFF" />
                 <Text style={styles.winnerActionTextWhite}>Split Bill</Text>
+              </Pressable>
+
+              <Pressable
+                onPress={handleShareStoryCard}
+                style={styles.winnerActionBtn}>
+                <Ionicons name="camera-outline" size={15} color="#0E382C" />
+                <Text style={styles.winnerActionText}>Story Card 📸</Text>
               </Pressable>
             </View>
           </View>
